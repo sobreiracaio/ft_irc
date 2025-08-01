@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/07/31 17:43:45 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/01 13:14:07 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class Server
     private:
     int _port;
     std::string _password;
-    int _socket_fd;
+    int _server_fd;
     sockaddr_in _server_addr;
     bool checkPassword(void);
     bool checkPort(void);

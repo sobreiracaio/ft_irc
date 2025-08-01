@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/07/31 17:46:14 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/01 13:14:28 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ Server::Server(std::string port, std::string password)
 
 Server::~Server()
 {
-    close(this->_socket_fd);
+    close(this->_server_fd);
 }
 
 int Server::createSocket()
@@ -34,8 +34,8 @@ int Server::createSocket()
         return -1;
     }
     std::cout << "Server socket created successfully!" << std::endl;
-    this->_socket_fd = listen_socket;
-    return (this->_socket_fd);
+    this->_server_fd = listen_socket;
+    return (this->_server_fd);
 }
 
 int Server::bindSocket(void)
@@ -45,7 +45,7 @@ int Server::bindSocket(void)
     this->_server_addr.sin_port = htons(this->_port);
     inet_pton(AF_INET, "0.0.0.0", &this->_server_addr.sin_addr);
  
-    if(bind(this->_socket_fd, (struct sockaddr*)&this->_server_addr, sizeof(this->_server_addr)) == -1)
+    if(bind(this->_server_fd, (struct sockaddr*)&this->_server_addr, sizeof(this->_server_addr)) == -1)
     {
         std::cerr << "Cant bind to IP/port" << std::endl;
         return -1;
@@ -57,7 +57,7 @@ int Server::bindSocket(void)
 
 int Server::listenSocket()
 {
-    if(listen(this->_socket_fd, SOMAXCONN) == -1)
+    if(listen(this->_server_fd, SOMAXCONN) == -1)
     {
         std::cerr <<"Cant listen!" << std::endl;
         return -1;
