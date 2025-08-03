@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/01 13:14:07 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 13:51:12 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,13 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <vector>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 
 class Server
 {
