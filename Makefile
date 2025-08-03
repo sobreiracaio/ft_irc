@@ -6,7 +6,7 @@
 #    By: caio <caio@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/03 13:35:25 by caio              #+#    #+#              #
-#    Updated: 2025/08/03 13:49:31 by caio             ###   ########.fr        #
+#    Updated: 2025/08/03 15:37:50 by caio             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,7 @@ EXTRA_FLAGS		=	-pedantic-errors -g
 
 INCLUDE			=	-Iinclude
 
-SRCS				=	src/main.cpp src/Client.cpp src/Server.cpp
+SRCS				=	src/main.cpp src/Client.cpp src/Server.cpp src/Utils.cpp
 
 OBJS			=	$(SRCS:.cpp=.o)
 

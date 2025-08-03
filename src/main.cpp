@@ -6,11 +6,12 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 15:33:15 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 16:18:21 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include "../include/Utils.hpp"
 
 #define BUFFER_SIZE 4096
 
@@ -20,7 +21,8 @@ int main(int argc, char **argv)
 {
     if (argc != 3)
     {
-        std::cerr << "Invalid arguments number!" << std::endl;
+        logMessage("Invalid number of arguments", RED, "Try ./ircserv <port> <password>", YELLOW, ERR);
+        //std::cerr << "Invalid arguments number!" << std::endl;
         return (-1);
     }
     
@@ -29,12 +31,10 @@ int main(int argc, char **argv)
        
     Server server(port, pass);
     
-    int server_fd = server.createSocket();
-    int bindStatus = server.bindSocket();
-    int listenStatus = server.listenSocket();
+    if (server.serverInit())
+        logMessage("Server running on port: ", BLUE, port, GREEN);
     
-    if (server_fd != -1 && bindStatus != -1 && listenStatus != -1)
-        std::cout<< "Server running on port: " << port << std::endl;
+    int server_fd = server.getServerFd();
 
     //POLL FD VECTOR
     
