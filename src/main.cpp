@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 16:18:21 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 16:40:56 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,18 +38,18 @@ int main(int argc, char **argv)
 
     //POLL FD VECTOR
     
-    std::vector<struct pollfd> client_fds;
+    std::vector<struct pollfd> fds;
     struct pollfd server_pollfd;
     server_pollfd.fd = server_fd;
     server_pollfd.events = POLLIN;
     server_pollfd.revents = 0;
-    client_fds.push_back(server_pollfd);
+    fds.push_back(server_pollfd);
     
     char buffer[BUFFER_SIZE];
     
     while(true)
     {
-        int poll_count = poll(&client_fds[0], client_fds.size(), -1);
+        int poll_count = poll(&fds[0], fds.size(), -1);
 
         if (poll_count == -1)
         {
@@ -58,11 +58,11 @@ int main(int argc, char **argv)
         }
 
         size_t i;
-        for (i = 0; i < client_fds.size(); i++)
+        for (i = 0; i < fds.size(); i++)
         {
-            if(client_fds[i].revents & POLLIN)
+            if(fds[i].revents & POLLIN)
             {
-                if(client_fds[i].fd == server_fd) //NEW CONNETION
+                if(fds[i].fd == server_fd) //NEW CONNETION
                 {
                     struct sockaddr_in client_addr;
                     socklen_t client_len = sizeof(client_addr);
@@ -79,28 +79,28 @@ int main(int argc, char **argv)
                     client_pollfd.fd = client_socket;
                     client_pollfd.events = POLLIN;
                     client_pollfd.revents = 0;
-                    client_fds.push_back(client_pollfd);
+                    fds.push_back(client_pollfd);
                 }
                 else
                 {
                     //EXISTING CLIENT SENT SOMETHING
                     memset(buffer, 0, BUFFER_SIZE);
-                    int bytes_received = recv(client_fds[i].fd, buffer, BUFFER_SIZE, 0);
+                    int bytes_received = recv(fds[i].fd, buffer, BUFFER_SIZE, 0);
                     if (bytes_received <= 0)
                     {
                         std::cout << "Client disconnected!" << std::endl;
-                        close(client_fds[i].fd);
-                        client_fds.erase(client_fds.begin() + i);
+                        close(fds[i].fd);
+                        fds.erase(fds.begin() + i);
                         --i; //INDEX CORRECTION AFTER ERASING
                     }
                     else
                     {
                         std::string msg(buffer, bytes_received);
-                        std::cout << "Received from FD= " << client_fds[i].fd << ": " << msg;
+                        std::cout << "Received from FD= " << fds[i].fd << ": " << msg;
 
                         //RESEND MESAGE TO CLIENT (FOR NOW ONLY FOR DEBUGGING PURPOSES)
                         msg += "\r\n"; //IRC FORMAT
-                        send(client_fds[i].fd, msg.c_str(), msg.length(), 0);
+                        send(fds[i].fd, msg.c_str(), msg.length(), 0);
                     }
                 }
             }
