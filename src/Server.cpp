@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 21:40:54 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 22:02:18 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ bool Server::serverInit()
             this->_listenSocket() == -1)
         return (false);
     
-    
+    // POLL SETUP FOR SERVER SOCKET
     struct pollfd server_pollfd;
     server_pollfd.fd = this->_server_fd;
     server_pollfd.events = POLLIN;
@@ -129,6 +129,8 @@ void Server::run()
                     }
                     fcntl(client_socket, F_SETFL, O_NONBLOCK);
                     logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
+                    
+                    //POLL SETUP FOR CLIENT SOCKET
                     struct pollfd client_pollfd;
                     client_pollfd.fd = client_socket;
                     client_pollfd.events = POLLIN;
