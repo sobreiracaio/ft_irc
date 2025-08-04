@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:52:39 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 15:56:00 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 21:21:37 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #define LOG 0
 #define ERR 1
@@ -26,3 +27,4 @@
 #define RESET   "\033[0m"
 
 void logMessage(std::string msg, std::string msg_color, std::string args, std::string args_color, int type = LOG);
+std::string itoa(int number);
