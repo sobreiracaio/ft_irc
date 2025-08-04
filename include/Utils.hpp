@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:52:39 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 21:21:37 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 17:07:19 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,3 +28,4 @@
 
 void logMessage(std::string msg, std::string msg_color, std::string args, std::string args_color, int type = LOG);
 std::string itoa(int number);
+bool isNum(const std::string &str);

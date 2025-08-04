@@ -6,16 +6,15 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 16:48:06 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 17:14:20 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 
-Server::Server(std::string port, std::string password)
+Server::Server(int port, std::string password)
 {
-    if (_checkPort())
-        this->_port = atoi(port.c_str());
+    this->_port = port;
     if(_checkPassword())
         this->_password = password;
 }
@@ -238,7 +237,3 @@ bool Server::_checkPassword()
     return true;
 }
 
-bool Server::_checkPort()
-{
-    return true;
-}

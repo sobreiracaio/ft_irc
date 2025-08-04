@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:37:55 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 21:20:46 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 17:07:09 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,4 +33,16 @@ std::string itoa(int number)
     oss << number;
     std::string str = oss.str();
     return (str);
+}
+
+bool isNum(const std::string &str)
+{
+    if(!isdigit(str[0]))
+        return (false);
+    for (size_t i = 0; i < str.length() ; i++)
+    {
+        if(!isdigit(str[i]))
+            return (false);
+    }
+    return (true);
 }

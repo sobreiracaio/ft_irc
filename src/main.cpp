@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 14:44:02 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 17:12:46 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,20 @@ int main(int argc, char **argv)
     
     std::string port = argv[1];
     std::string pass = argv[2];
+    
+    int int_port = 0;
+    
+    if(isNum(port))
+    {
+        int_port = atoi(port.c_str());
+    }
+    else
+    {
+        logMessage("ERROR: ", RED, "Invalid port number!", YELLOW, ERR);
+        return (-1);
+    }
        
-    Server server(port, pass);
+    Server server(int_port, pass);
     
     if (server.serverInit())
         logMessage("Server running on port: ", BLUE, port, GREEN);
