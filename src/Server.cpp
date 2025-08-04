@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 21:34:44 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/03 21:40:54 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ void Server::run()
                     int bytes_received = recv(this->_poll_fds[i].fd, buffer, BUFFER_SIZE, 0);
                     if (bytes_received <= 0)
                     {
-                        std::cout << "Client disconnected!" << std::endl;
+                        logMessage("Client disconnected!", YELLOW, "", RESET);
                         close(this->_poll_fds[i].fd);
                         this->_poll_fds.erase(this->_poll_fds.begin() + i);
                         --i; //INDEX CORRECTION AFTER ERASING
@@ -150,7 +150,8 @@ void Server::run()
                     else
                     {
                         std::string msg(buffer, bytes_received);
-                        std::cout << "Received from FD= " << this->_poll_fds[i].fd << ": " << msg;
+                        logMessage("Received form FD = ", GREEN, itoa(this->_poll_fds[i].fd), YELLOW);
+                        logMessage(msg, BLUE, "", RESET);
 
                         //RESEND MESAGE TO CLIENT (FOR NOW ONLY FOR DEBUGGING PURPOSES)
                         msg += "\r\n"; //IRC FORMAT
