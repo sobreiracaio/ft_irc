@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 17:18:31 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 18:26:19 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,7 @@ void Server::_handleClientData(int client_fd)
     memset(buffer, 0, BUFFER_SIZE);
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
     std::string msg(buffer, bytes_received);
-    logMessage(msg, BLUE, "", RESET);
+    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, msg, RESET);
     if (bytes_received <= 0)
     {
         logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);

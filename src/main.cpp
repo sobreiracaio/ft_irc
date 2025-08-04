@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 17:19:21 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 18:21:27 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 {
     if (argc != 3)
     {
-        logMessage("Invalid number of arguments", RED, "Try ./ircserv <port> <password>", YELLOW, ERR);
+        logMessage("Invalid number of arguments! ", RED, "Try ./ircserv <port> <password>", YELLOW, ERR);
         return (-1);
     }
     
