@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 16:26:03 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 16:48:06 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,13 @@ Server::Server(std::string port, std::string password)
 
 Server::~Server()
 {
-    close(this->_server_fd);
+    std::map<int, Client*>::iterator it;
+    for (it = this->_clients.begin(); it != this->_clients.end(); it++)
+        delete it->second;
+    this->_clients.clear();
+    
+    if(this->_server_fd > 0)
+        close(this->_server_fd);
 }
 
 int Server::_createSocket()
@@ -42,6 +48,8 @@ int Server::_createSocket()
         return -1;
     }
     
+    this->_server_fd = listen_socket;
+
     int opt = 1;
     setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     logMessage("Server socket created successfully!", BLUE, "", RESET);
@@ -121,6 +129,9 @@ void Server::run()
                 {
                     //HANDLING CLIENT DATA
                     this->_handleClientData(this->_poll_fds[i].fd);
+                    
+                    if(i >= this->_poll_fds.size())
+                        break;
    
                 }
             }
@@ -171,6 +182,7 @@ void Server::_handleClientData(int client_fd)
     logMessage(msg, BLUE, "", RESET);
     if (bytes_received <= 0)
     {
+        logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
         this->_removeClient(client_fd);
     }
     else
@@ -189,14 +201,21 @@ void Server::_removeClient(int client_fd)
 
     for(it = this->_poll_fds.begin(); it != this->_poll_fds.end(); it++)
     {
-        this->_poll_fds.erase(it);
-        break;
+        if(it->fd == client_fd)
+        {
+            this->_poll_fds.erase(it);
+            break;
+        }   
     }
     if (client_it != this->_clients.end())
     {
         delete client_it->second;
         this->_clients.erase(client_it);
     }
+
+    close(client_fd);
+    logMessage("Client removed! FD = ", RED, itoa(client_fd), YELLOW);
+    
 }
 
 Client *Server::getClient(int client_fd)
