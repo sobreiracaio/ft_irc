@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 18:28:19 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 14:16:29 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,5 +29,7 @@ class Client
         std::string _hostname;
 
     public:
+        Client(int client_socket, sockaddr_in client_addr);
+        ~Client();
     
 };

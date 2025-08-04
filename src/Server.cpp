@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/03 22:02:18 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 16:26:03 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,8 +99,6 @@ bool Server::serverInit()
 
 void Server::run()
 {
-    char buffer[BUFFER_SIZE];
-    
     while(true)
     {
         int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), -1);
@@ -111,59 +109,104 @@ void Server::run()
             break;
         }
 
-        size_t i;
-        for (i = 0; i < this->_poll_fds.size(); i++)
+        for (size_t i = 0; i < this->_poll_fds.size(); i++)
         {
             if(this->_poll_fds[i].revents & POLLIN)
             {
-                if(this->_poll_fds[i].fd == this->_server_fd) //NEW CONNECTION -> CREATE AN FUNCTION TO ACCEPT CLIENT
+                if(this->_poll_fds[i].fd == this->_server_fd) //NEW CONNECTION
                 {
-                    struct sockaddr_in client_addr;
-                    socklen_t client_len = sizeof(client_addr);
-                    int client_socket = accept(this->_server_fd, (struct sockaddr *)&client_addr, &client_len);
-                    
-                    if (client_socket < 0)
-                    {
-                        logMessage("ERROR: ", RED, "Accept failed!", YELLOW, ERR);
-                        continue;
-                    }
-                    fcntl(client_socket, F_SETFL, O_NONBLOCK);
-                    logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
-                    
-                    //POLL SETUP FOR CLIENT SOCKET
-                    struct pollfd client_pollfd;
-                    client_pollfd.fd = client_socket;
-                    client_pollfd.events = POLLIN;
-                    client_pollfd.revents = 0;
-                    this->_poll_fds.push_back(client_pollfd);
-                }                                          // FUNCTION ACCEPT CLIENT ENDS HERE
+                    this->_acceptNewClient(); //FUNCTION TO ACCEPT CLIENT
+                }                                          
                 else
                 {
-                    //EXISTING CLIENT SENT SOMETHING -> HANDLE CLIENT DATA
-                    memset(buffer, 0, BUFFER_SIZE);
-                    int bytes_received = recv(this->_poll_fds[i].fd, buffer, BUFFER_SIZE, 0);
-                    if (bytes_received <= 0)
-                    {
-                        logMessage("Client disconnected!", YELLOW, "", RESET);
-                        close(this->_poll_fds[i].fd);
-                        this->_poll_fds.erase(this->_poll_fds.begin() + i);
-                        --i; //INDEX CORRECTION AFTER ERASING
-                    }
-                    else
-                    {
-                        std::string msg(buffer, bytes_received);
-                        logMessage("Received form FD = ", GREEN, itoa(this->_poll_fds[i].fd), YELLOW);
-                        logMessage(msg, BLUE, "", RESET);
-
-                        //RESEND MESAGE TO CLIENT (FOR NOW ONLY FOR DEBUGGING PURPOSES)
-                        msg += "\r\n"; //IRC FORMAT
-                        std::string msg2 = "Resend: " + msg + "\r\n";
-                        send(this->_poll_fds[i].fd, msg2.c_str(), msg.length(), 0); 
-                    } // HANDLE CLIENT DATA ENDS HERE
+                    //HANDLING CLIENT DATA
+                    this->_handleClientData(this->_poll_fds[i].fd);
+   
                 }
             }
         }
     }
+}
+
+void Server::_acceptNewClient(void)
+{
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    int client_socket = accept(this->_server_fd, (struct sockaddr *)&client_addr, &client_len);
+                    
+    if (client_socket < 0)
+    {
+        logMessage("ERROR: ", RED, "Accept failed!", YELLOW, ERR);
+        return;
+    }
+    
+    fcntl(client_socket, F_SETFL, O_NONBLOCK);
+    
+    //CREATE NEW CLIENT AND ADD IT TO THE MAP ACCORDING TO ITS FD NUMBER(KEY)
+
+    Client* new_client = new Client(client_socket, client_addr);
+    this->_clients[client_socket] = new_client;
+    
+    logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
+                    
+    //POLL SETUP FOR CLIENT SOCKET
+    struct pollfd client_pollfd;
+    client_pollfd.fd = client_socket;
+    client_pollfd.events = POLLIN;
+    client_pollfd.revents = 0;
+    this->_poll_fds.push_back(client_pollfd);
+}
+
+void Server::_handleClientData(int client_fd)
+{
+    char buffer[BUFFER_SIZE];
+    Client *client = getClient(client_fd);
+    
+    if (!client)
+        return;
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
+    std::string msg(buffer, bytes_received);
+    logMessage(msg, BLUE, "", RESET);
+    if (bytes_received <= 0)
+    {
+        this->_removeClient(client_fd);
+    }
+    else
+    {
+        //treat data
+    }
+    
+}
+
+void Server::_removeClient(int client_fd)
+{
+    std::vector<struct pollfd>::iterator it;
+    std::map<int, Client*>::iterator client_it;
+
+    client_it = this->_clients.find(client_fd);
+
+    for(it = this->_poll_fds.begin(); it != this->_poll_fds.end(); it++)
+    {
+        this->_poll_fds.erase(it);
+        break;
+    }
+    if (client_it != this->_clients.end())
+    {
+        delete client_it->second;
+        this->_clients.erase(client_it);
+    }
+}
+
+Client *Server::getClient(int client_fd)
+{
+    std::map<int, Client*>::iterator it;
+    it = this->_clients.find(client_fd);
+    if(it != this->_clients.end())
+        return it->second;
+    else
+        return (NULL);
 }
 
 int Server::getServerFd(void)
