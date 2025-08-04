@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 18:26:19 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/04 20:57:48 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,7 @@ void Server::_handleClientData(int client_fd)
     }
     else
     {
-        //treat data parse "msg"
+        //send(client_fd, msg.c_str(), msg.length(), 0);
     }
     
 }
