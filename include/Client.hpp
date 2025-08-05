@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 15:49:35 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 19:01:18 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <cstring>
 
 #include "Utils.hpp"
+
 
 class Client
 {
@@ -53,7 +54,7 @@ class Client
 
         void appendBuffer(const std::string &data);
 
-        void feedNamesAndPass(const std::string &data);
+        void setNamesAndPass(const std::string &data);
         
 
         

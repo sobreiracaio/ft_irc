@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 16:07:13 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 19:01:18 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ void Client::appendBuffer(const std::string &data)
     this->_buffer += data;
 }
 
-void Client::feedNamesAndPass(std::string const &data)
+void Client::setNamesAndPass(std::string const &data)
 {
     std::istringstream iss(data);
     std::string line;
@@ -102,6 +102,9 @@ void Client::feedNamesAndPass(std::string const &data)
             std::string temp;
             std::getline(temp_iss, temp, ' ');
             this->setUsername(temp);
+            std::getline(temp_iss, temp, '\n');
+            this->setRealname(temp.substr(5));
+            
         }
     }
 }

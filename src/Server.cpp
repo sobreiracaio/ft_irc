@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 18:17:25 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 19:05:22 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,9 +176,9 @@ void Server::_handleClientData(int client_fd)
     memset(buffer, 0, BUFFER_SIZE);
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
     std::string data(buffer, bytes_received);
-    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, RESET);
+    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
-    client->feedNamesAndPass(data);
+    client->setNamesAndPass(data);
     if(client->getPassword() != this->_password)
     {
         logMessage("Client disconnected! FD = ", RED, "Invalid Password!", YELLOW);

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 15:51:35 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 18:45:21 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 
 #include "Utils.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 
 #define BUFFER_SIZE 4096
 
@@ -42,6 +43,7 @@ class Server
         sockaddr_in _server_addr;
         std::vector<struct pollfd> _poll_fds;
         std::map<int, Client*> _clients;
+        std::map<std::string, Channel*> _channels;
         
     
         // Private initialization methods
