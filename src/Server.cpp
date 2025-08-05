@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 17:05:51 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 18:17:25 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,8 +156,7 @@ void Server::_acceptNewClient(void)
     Client* new_client = new Client(client_socket, client_addr);
     this->_clients[client_socket] = new_client;
     
-    
-                    
+                       
     //POLL SETUP FOR CLIENT SOCKET
     struct pollfd client_pollfd;
     client_pollfd.fd = client_socket;
@@ -178,6 +177,15 @@ void Server::_handleClientData(int client_fd)
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
     std::string data(buffer, bytes_received);
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, RESET);
+    
+    client->feedNamesAndPass(data);
+    if(client->getPassword() != this->_password)
+    {
+        logMessage("Client disconnected! FD = ", RED, "Invalid Password!", YELLOW);
+        this->_removeClient(client_fd);
+        return;
+    }
+    
     if (bytes_received <= 0)
     {
         logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
@@ -186,7 +194,7 @@ void Server::_handleClientData(int client_fd)
     else
     {
         client->appendBuffer(data);
-        client->feedNamesAndPass(data);
+        
         // CONTINUE PARSING DATA
     }
     
