@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 14:16:29 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 15:49:35 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <cstring>
 
 #include "Utils.hpp"
 
@@ -27,9 +30,32 @@ class Client
         std::string _username;
         std::string _realname;
         std::string _hostname;
+        std::string _password;
+
+        std::string _buffer;
 
     public:
         Client(int client_socket, sockaddr_in client_addr);
         ~Client();
+        
+        int getFd() const;
+        std::string getNickname() const;
+        std::string getUsername() const;
+        std::string getRealname() const;
+        std::string getHostname() const;
+        std::string getPassword() const;
+
+        std::string getBuffer() const;
+
+        void setNickname(const std::string &nickname);
+        void setUsername(const std::string &username);
+        void setRealname(const std::string &realname);
+
+        void appendBuffer(const std::string &data);
+
+        void feedNamesAndPass(const std::string &data);
+        
+
+        
     
 };

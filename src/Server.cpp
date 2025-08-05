@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 20:57:48 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 17:05:51 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,7 @@
 Server::Server(int port, std::string password)
 {
     this->_port = port;
-    if(_checkPassword())
-        this->_password = password;
+    this->_password = password;
 }
 
 Server::~Server()
@@ -157,7 +156,7 @@ void Server::_acceptNewClient(void)
     Client* new_client = new Client(client_socket, client_addr);
     this->_clients[client_socket] = new_client;
     
-    logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
+    
                     
     //POLL SETUP FOR CLIENT SOCKET
     struct pollfd client_pollfd;
@@ -177,8 +176,8 @@ void Server::_handleClientData(int client_fd)
     
     memset(buffer, 0, BUFFER_SIZE);
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
-    std::string msg(buffer, bytes_received);
-    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, msg, RESET);
+    std::string data(buffer, bytes_received);
+    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, RESET);
     if (bytes_received <= 0)
     {
         logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
@@ -186,7 +185,9 @@ void Server::_handleClientData(int client_fd)
     }
     else
     {
-        //send(client_fd, msg.c_str(), msg.length(), 0);
+        client->appendBuffer(data);
+        client->feedNamesAndPass(data);
+        // CONTINUE PARSING DATA
     }
     
 }
@@ -232,8 +233,10 @@ int Server::getServerFd(void)
     return this->_server_fd;
 }
 
-bool Server::_checkPassword()
+bool Server::_checkPassword(std::string const &client_pass)
 {
+    if(this->_password != client_pass)
+        return false;
     return true;
 }
 

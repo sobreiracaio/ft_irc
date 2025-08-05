@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/04 17:11:19 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 15:51:35 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ class Server
         
     
         // Private initialization methods
-        bool _checkPassword(void);
+        bool _checkPassword(std::string const &client_pass);
         int _createSocket(void);
         int _bindSocket(void);
         int _listenSocket(void);
