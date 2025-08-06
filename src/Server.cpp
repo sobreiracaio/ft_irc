@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 18:50:15 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 19:06:16 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,10 @@ void Server::_handleClientData(int client_fd)
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
     if(client->getNickname().empty())
+    {
         client->setNamesAndPass(data);
+        return;
+    }
     
     if(client->getPassword() != this->_password)
     {
@@ -311,14 +314,14 @@ void Server::changeNick(std::string const &data, int client_fd)
 
     std::string nickname = data.substr(5);
     std::string old_nick = tempClient->getNickname();
-    if(old_nick[old_nick.length() -1] == '\n' || old_nick[old_nick.length() -1] == '\r')
+    if(old_nick[old_nick.length() - 1] == '\n' || old_nick[old_nick.length() - 1] == '\r')
         old_nick.pop_back();
     std::string msg = ":" + old_nick + "!" + tempClient->getUsername() + "@" + tempClient->getHostname() + " " +
                         "NICK :" + nickname + "\r\n";
         
+    std::cout <<"FD = "<< tempClient->getFd() << " - " << tempClient->getNickname()<<" --> " << msg << std::endl;                    
     send(tempClient->getFd(), msg.c_str(), msg.length(), 0);
     tempClient->setNickname(nickname);
-    std::cout <<"FD = "<< tempClient->getFd() << " - " << tempClient->getNickname()<<" --> " << msg << std::endl;                    
     //delete tempClient;
     
 }
