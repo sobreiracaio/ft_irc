@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 18:03:24 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 18:50:15 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,7 @@ void Server::_acceptNewClient(void)
     Client* new_client = new Client(client_socket, client_addr);
     this->_clients[client_socket] = new_client;
     
-                       
+      
     //POLL SETUP FOR CLIENT SOCKET
     struct pollfd client_pollfd;
     client_pollfd.fd = client_socket;
@@ -179,8 +179,8 @@ void Server::_handleClientData(int client_fd)
     std::string data(buffer, bytes_received);
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
-    
-    client->setNamesAndPass(data);
+    if(client->getNickname().empty())
+        client->setNamesAndPass(data);
     
     if(client->getPassword() != this->_password)
     {
@@ -311,14 +311,14 @@ void Server::changeNick(std::string const &data, int client_fd)
 
     std::string nickname = data.substr(5);
     std::string old_nick = tempClient->getNickname();
-    if(old_nick[old_nick.length() -1] == '\n')
+    if(old_nick[old_nick.length() -1] == '\n' || old_nick[old_nick.length() -1] == '\r')
         old_nick.pop_back();
     std::string msg = ":" + old_nick + "!" + tempClient->getUsername() + "@" + tempClient->getHostname() + " " +
                         "NICK :" + nickname + "\r\n";
         
-    std::cout <<"FD = "<< tempClient->getFd() << " --> " << msg << std::endl;                    
     send(tempClient->getFd(), msg.c_str(), msg.length(), 0);
     tempClient->setNickname(nickname);
+    std::cout <<"FD = "<< tempClient->getFd() << " - " << tempClient->getNickname()<<" --> " << msg << std::endl;                    
     //delete tempClient;
     
 }

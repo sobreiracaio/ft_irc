@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 17:48:13 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 18:45:10 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,9 +91,7 @@ void Client::cleanBuffer()
 
 void Client::setNamesAndPass(std::string const &data)
 {
-    static bool flag = false;
-    if(!flag)
-    {        
+        std::cout << "CHAMEI" << std::endl;
         std::istringstream iss(data);
         std::string line;
     
@@ -120,6 +118,5 @@ void Client::setNamesAndPass(std::string const &data)
                 
             }
         }
-    }
-    flag = true;
+
 }
