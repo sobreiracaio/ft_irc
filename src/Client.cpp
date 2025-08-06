@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 21:26:42 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 22:05:02 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,12 +61,17 @@ std::string Client::getBuffer() const
 
 void Client::setNickname(const std::string &nickname)
 {
-    std::string msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname() + " " +
-                        "NICK :" + nickname + "\r\n";
+    static bool flag = false;
     
-    std::cout <<"FD = "<< this->getFd() << " --> " <<msg << std::endl;                    
-    send(this->getFd(), msg.c_str(), msg.length(), 0);
-    
+    if(flag)
+    {
+        std::string msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname() + " " +
+                            "NICK :" + nickname + "\r\n";
+        
+        std::cout <<"FD = "<< this->getFd() << " --> " << msg << std::endl;                    
+        send(this->getFd(), msg.c_str(), msg.length(), 0);
+    }
+    flag = true;
     this->_nickname = nickname;
 }
 
