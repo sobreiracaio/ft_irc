@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 19:01:18 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/05 21:26:42 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,17 +61,13 @@ std::string Client::getBuffer() const
 
 void Client::setNickname(const std::string &nickname)
 {
+    std::string msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname() + " " +
+                        "NICK :" + nickname + "\r\n";
+    
+    std::cout <<"FD = "<< this->getFd() << " --> " <<msg << std::endl;                    
+    send(this->getFd(), msg.c_str(), msg.length(), 0);
+    
     this->_nickname = nickname;
-}
-
-void Client::setRealname(const std::string &realname)
-{
-    this->_realname = realname;
-}
-
-void Client::setUsername(const std::string &username)
-{
-    this->_username = username;
 }
 
 void Client::appendBuffer(const std::string &data)
@@ -101,9 +97,9 @@ void Client::setNamesAndPass(std::string const &data)
             std::istringstream temp_iss(line.substr(5));
             std::string temp;
             std::getline(temp_iss, temp, ' ');
-            this->setUsername(temp);
+            this->_username = temp;
             std::getline(temp_iss, temp, '\n');
-            this->setRealname(temp.substr(5));
+            this->_realname = temp.substr(5);
             
         }
     }
