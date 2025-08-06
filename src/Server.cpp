@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 19:05:22 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 18:03:24 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,6 +170,7 @@ void Server::_handleClientData(int client_fd)
     char buffer[BUFFER_SIZE];
     Client *client = getClient(client_fd);
     
+    
     if (!client)
         return;
     
@@ -178,7 +179,9 @@ void Server::_handleClientData(int client_fd)
     std::string data(buffer, bytes_received);
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
+    
     client->setNamesAndPass(data);
+    
     if(client->getPassword() != this->_password)
     {
         logMessage("Client disconnected! FD = ", RED, "Invalid Password!", YELLOW);
@@ -194,6 +197,13 @@ void Server::_handleClientData(int client_fd)
     else
     {
         client->appendBuffer(data);
+        if(client->isDataComplete())
+        {
+            std::cout << "Client buffer is: " << client->getBuffer() << std::endl;
+            int command_code = this->parseCommand(data);
+            this->executeCommand(client_fd, command_code, data);
+            client->cleanBuffer();
+        }
         
         // CONTINUE PARSING DATA
     }
@@ -246,5 +256,70 @@ bool Server::_checkPassword(std::string const &client_pass)
     if(this->_password != client_pass)
         return false;
     return true;
+}
+
+int Server::parseCommand(const std::string& data)
+{
+    std::istringstream iss(data);
+    std::string temp;
+    
+    std::getline(iss, temp, ' ');
+    std::cout << temp << std::endl;
+    if(temp == "JOIN")
+    {
+        logMessage(temp, RED," Code is: " + itoa(JOIN), YELLOW);
+        return (JOIN);
+    }
+    if(temp == "PRIVMSG")
+    {
+        logMessage(temp, RED," Code is: " + itoa(PRIVMSG), YELLOW);
+        return (PRIVMSG);
+    }
+    if(temp == "NICK")
+    {
+        logMessage(temp, RED," Code is: " + itoa(NICK), YELLOW);
+        return (NICK);
+    }
+    
+    return (NO_COMM);                
+}
+
+void Server::executeCommand(int client_fd, int command_code, std::string const &data)
+{
+    switch (command_code)
+    {
+    case JOIN:
+        /* code */
+        break;
+    case PRIVMSG:
+        /* code */
+        break;
+    case NICK:
+        this->changeNick(data, client_fd);
+        break;
+    
+        
+    default:
+        break;
+    }
+    return;
+}
+
+void Server::changeNick(std::string const &data, int client_fd)
+{
+    Client *tempClient = this->_clients[client_fd];
+
+    std::string nickname = data.substr(5);
+    std::string old_nick = tempClient->getNickname();
+    if(old_nick[old_nick.length() -1] == '\n')
+        old_nick.pop_back();
+    std::string msg = ":" + old_nick + "!" + tempClient->getUsername() + "@" + tempClient->getHostname() + " " +
+                        "NICK :" + nickname + "\r\n";
+        
+    std::cout <<"FD = "<< tempClient->getFd() << " --> " << msg << std::endl;                    
+    send(tempClient->getFd(), msg.c_str(), msg.length(), 0);
+    tempClient->setNickname(nickname);
+    //delete tempClient;
+    
 }
 

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 18:45:21 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 16:22:40 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,12 @@
 
 #define BUFFER_SIZE 4096
 
+#define JOIN 100
+#define PRIVMSG 101
+#define NICK 102
+#define QUIT 103
+#define NO_COMM -1
+
 class Server
 {
     private:
@@ -44,6 +50,7 @@ class Server
         std::vector<struct pollfd> _poll_fds;
         std::map<int, Client*> _clients;
         std::map<std::string, Channel*> _channels;
+        
         
     
         // Private initialization methods
@@ -71,5 +78,11 @@ class Server
         
         //CLIENT MANAGEMENT METHODS
         Client *getClient(int client_fd);
+        void changeNick(std::string const &data, int client_fd);
+        
+
+        //SERVER COMMANDS METHODS
+        int parseCommand(const std::string& data);
+        void executeCommand(int client_fd, int command_code, std::string const &data);
         
 };

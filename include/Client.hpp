@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/05 21:04:51 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/06 14:04:39 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,8 @@ class Client
         
 
         void appendBuffer(const std::string &data);
+        bool isDataComplete() const;
+        void cleanBuffer();
 
         void setNamesAndPass(const std::string &data);
 
