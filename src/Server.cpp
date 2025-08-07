@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/07 16:44:53 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/07 17:24:40 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,7 @@ void Server::_handleClientData(int client_fd)
         client->appendBuffer(data);
         if(client->isDataComplete())
         {
-            std::cout << "Client buffer is: " << client->getBuffer() << std::endl;
+            //std::cout << "Client buffer is: " << client->getBuffer() << std::endl;
             int command_code = this->parseCommand(data);
             this->executeCommand(client_fd, command_code, data);
             client->cleanBuffer();
@@ -336,7 +336,7 @@ void Server::privateMsg(std::string const &data, int client_fd)
         
     std::string target = data.substr(space + 1, colon - space - 1);
     std::string message = data.substr(colon + 1);
-
+    
     if(target.empty())
     {
         send(client_fd, err.c_str(), err.length(), 0);
@@ -357,7 +357,7 @@ void Server::privateMsg(std::string const &data, int client_fd)
             return;
         }
         std::string returnMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" +
-                            sender->getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+                            sender->getHostname() + " PRIVMSG " + target + message + "\r\n";
         
         std::cout << returnMsg << std::endl;
         send(receiver->getFd(), returnMsg.c_str(), returnMsg.length(), 0);
@@ -381,13 +381,10 @@ Client *Server::getClientByNick(std::string const &nick)
     for (client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++)
     {
         Client *temp = client_it->second;
-        std::cout << temp->getNickname() << "-" << std::endl;
-        std::cout << formattedNick << "-" <<std::endl;
+        
         if(temp->getNickname() == formattedNick)
             return (temp);
     }
-
     return (NULL);
-    
 }
 
