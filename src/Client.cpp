@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 19:10:50 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/07 16:26:47 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,13 @@ std::string Client::getBuffer() const
 
 void Client::setNickname(const std::string &nickname)
 {
-    this->_nickname = nickname;
+    std::string formattedNick = nickname; 
+    std::string::size_type pos;
+
+    pos = formattedNick.find("\r\n");
+    if (pos != std::string::npos)
+        formattedNick.erase(pos, 2);
+    this->_nickname = formattedNick;
 }
 
 void Client::appendBuffer(const std::string &data)
@@ -80,7 +86,6 @@ void Client::cleanBuffer()
 
 void Client::setNamesAndPass(std::string const &data)
 {
-        std::cout << "CHAMEI" << std::endl;
         std::istringstream iss(data);
         std::string line;
     
@@ -95,7 +100,7 @@ void Client::setNamesAndPass(std::string const &data)
             if(cmd == "PASS ")
                 this->_password = line.substr(5);
             if(cmd == "NICK ")
-                this->_nickname = line.substr(5);
+                this->setNickname(line.substr(5)); 
             if(cmd == "USER ")
             {
                 std::istringstream temp_iss(line.substr(5));

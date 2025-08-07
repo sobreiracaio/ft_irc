@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 19:06:16 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/07 16:44:53 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,23 +267,17 @@ int Server::parseCommand(const std::string& data)
     std::string temp;
     
     std::getline(iss, temp, ' ');
-    std::cout << temp << std::endl;
     if(temp == "JOIN")
     {
         logMessage(temp, RED," Code is: " + itoa(JOIN), YELLOW);
         return (JOIN);
     }
     if(temp == "PRIVMSG")
-    {
-        logMessage(temp, RED," Code is: " + itoa(PRIVMSG), YELLOW);
         return (PRIVMSG);
-    }
-    if(temp == "NICK")
-    {
-        logMessage(temp, RED," Code is: " + itoa(NICK), YELLOW);
-        return (NICK);
-    }
     
+    if(temp == "NICK")
+        return (NICK);
+        
     return (NO_COMM);                
 }
 
@@ -295,7 +289,7 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
         /* code */
         break;
     case PRIVMSG:
-        /* code */
+        this->privateMsg(data, client_fd);
         break;
     case NICK:
         this->changeNick(data, client_fd);
@@ -322,7 +316,78 @@ void Server::changeNick(std::string const &data, int client_fd)
     std::cout <<"FD = "<< tempClient->getFd() << " - " << tempClient->getNickname()<<" --> " << msg << std::endl;                    
     send(tempClient->getFd(), msg.c_str(), msg.length(), 0);
     tempClient->setNickname(nickname);
-    //delete tempClient;
+   
+    
+}
+
+void Server::privateMsg(std::string const &data, int client_fd)
+{
+    Client *sender = getClient(client_fd);
+    
+    size_t space = data.find(' ');
+    size_t colon = data.find(':', space);
+    std::string err = ":ircserv 411 " + sender->getNickname() + " No recipient given (PRIVMSG)\r\n";
+    
+    if(space == std::string::npos || colon == std::string::npos)
+    {
+        send(client_fd, err.c_str(), err.length(), 0);
+        return;
+    }
+        
+    std::string target = data.substr(space + 1, colon - space - 1);
+    std::string message = data.substr(colon + 1);
+
+    if(target.empty())
+    {
+        send(client_fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    
+    if (target[0] == '#')
+    {
+        // verify if the channel exists
+        // send message to channel except for the sender
+    }
+    else
+    {
+        Client *receiver = this->getClientByNick(target);
+        if(!receiver)
+        {
+            send(client_fd, err.c_str(), err.length(), 0);
+            return;
+        }
+        std::string returnMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" +
+                            sender->getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+        
+        std::cout << returnMsg << std::endl;
+        send(receiver->getFd(), returnMsg.c_str(), returnMsg.length(), 0);
+    }
+    
+}
+
+Client *Server::getClientByNick(std::string const &nick)
+{
+    std::map<int, Client*>::iterator client_it;
+    
+    std::string formattedNick = nick;
+    std::string::size_type pos;
+
+    pos = formattedNick.find(" ");
+    if (pos != std::string::npos)
+        formattedNick.erase(pos);
+    
+
+
+    for (client_it = this->_clients.begin(); client_it != this->_clients.end(); client_it++)
+    {
+        Client *temp = client_it->second;
+        std::cout << temp->getNickname() << "-" << std::endl;
+        std::cout << formattedNick << "-" <<std::endl;
+        if(temp->getNickname() == formattedNick)
+            return (temp);
+    }
+
+    return (NULL);
     
 }
 

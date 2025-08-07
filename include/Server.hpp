@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 16:22:40 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/07 15:19:03 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,8 @@ class Server
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
         
-       
+
+        
         
     
     public:
@@ -78,8 +79,9 @@ class Server
         
         //CLIENT MANAGEMENT METHODS
         Client *getClient(int client_fd);
+        Client *getClientByNick(std::string const &nick);
         void changeNick(std::string const &data, int client_fd);
-        
+        void privateMsg(std::string const &data, int client_fd);
 
         //SERVER COMMANDS METHODS
         int parseCommand(const std::string& data);
