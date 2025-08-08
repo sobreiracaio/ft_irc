@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 15:06:21 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/08 15:21:07 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,6 +186,7 @@ void Server::_handleClientData(int client_fd)
     if(client->getNickname().empty())
     {
         client->setNamesAndPass(data);
+        //funcao para checar nicks iguais
         this->_welcomeMessage(client);
         return;
     }
@@ -197,7 +198,7 @@ void Server::_handleClientData(int client_fd)
         return;
     }
 
-    //funcao para checar nicks iguais
+    
     
     if (bytes_received <= 0)
     {
