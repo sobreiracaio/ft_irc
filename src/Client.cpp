@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/07 16:26:47 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/08 17:06:38 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ Client::Client(int client_socket, sockaddr_in client_addr):_client_fd(client_soc
 }
 
 Client::~Client(){}
-
 
 int Client::getFd() const
 {

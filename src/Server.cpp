@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 15:21:07 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/08 17:20:21 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,6 +297,7 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
         break;
     case NICK:
         this->changeNick(data, client_fd);
+        //register nick function somewhere
         break;
     
         
@@ -349,8 +350,24 @@ void Server::privateMsg(std::string const &data, int client_fd)
     
     if (target[0] == '#')
     {
-        // verify if the channel exists
-        // send message to channel except for the sender
+        std::string no_hash = target.substr(1);
+        size_t pos = no_hash.find(" ");
+
+        if(pos != std::string::npos)
+            no_hash.erase(pos);
+
+        
+        if(this->getChannelByName(no_hash)) // verify if the channel exists
+        {
+             
+        //     // send message to channel except for the sender (comparar o numero do client_fd)
+        //     return;
+        }
+        else
+        {
+            std::cout << "nao existe esse canal" << std::endl;
+            //message telling that the channel doesnt exist
+        }
     }
     else
     {
@@ -406,21 +423,31 @@ void Server::joinChannel(std::string const &data, int client_fd)
     std::istringstream iss(unfilteredData);
 
     iss >> channelName >> channelPassword;
+
+    channelName = channelName.substr(1);
     
-    // if(this->_channels.empty())
-    // {
-    //     Channel *new_channel = new Channel(channelName, channelPassword);
-    //     this->_channels[channelName] = new_channel;
-    // }
-    // else if(this->getChannelByName(channelName) == NULL) // caso o canal nao esteja na lista
-    // {
-    //     Channel *new_channel = new Channel(channelName, channelPassword);
-    //     this->_channels[channelName] = new_channel;
-    // }
-    // else
-    // {
-    //     // se o canal estiver na lista entra nele
-    // }
+    if(this->_channels.empty()) // caso ainda nao haja canais 
+    {
+        Channel *new_channel = new Channel(channelName, channelPassword);
+        this->_channels[channelName] = new_channel;
+        new_channel->addUser(this->getClient(client_fd)->getNickname());
+        std::cout << "AQUI 1" << std::endl;
+    }
+    else if(this->getChannelByName(channelName) == NULL) // caso o canal nao esteja na lista
+    {
+        Channel *new_channel = new Channel(channelName, channelPassword);
+        this->_channels[channelName] = new_channel;
+        new_channel->addUser(this->getClient(client_fd)->getNickname());
+        std::cout << "AQUI 2" << std::endl;
+    }
+    else 
+    {
+        Channel *existingChannel = this->getChannelByName(channelName);
+        existingChannel->addUser(this->getClient(client_fd)->getNickname());
+        std::cout << "AQUI 3" << std::endl;
+        //usar os metodos de existing channel para criar a mensagem formatada irc para o client interpretar
+        // se o canal estiver na lista entra nele
+    }
     
 
     
@@ -428,7 +455,16 @@ void Server::joinChannel(std::string const &data, int client_fd)
 
 Channel *Server::getChannelByName(std::string const &name)
 {
+    std::map<std::string, Channel*>::iterator channel_it;
+
+    for (channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++)
+    {
+        Channel *temp = channel_it->second;
     
+        if(temp->getName() == name)
+            return (temp);
+    }
+     return (NULL);
 }
 
 
