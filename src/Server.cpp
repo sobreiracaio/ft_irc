@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/07 17:24:40 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/08 15:06:21 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,7 @@ void Server::run()
                 if(this->_poll_fds[i].fd == this->_server_fd) //NEW CONNECTION
                 {
                     this->_acceptNewClient(); //FUNCTION TO ACCEPT CLIENT
+                    
                 }                                          
                 else
                 {
@@ -163,6 +164,9 @@ void Server::_acceptNewClient(void)
     client_pollfd.events = POLLIN;
     client_pollfd.revents = 0;
     this->_poll_fds.push_back(client_pollfd);
+
+    
+    
 }
 
 void Server::_handleClientData(int client_fd)
@@ -182,6 +186,7 @@ void Server::_handleClientData(int client_fd)
     if(client->getNickname().empty())
     {
         client->setNamesAndPass(data);
+        this->_welcomeMessage(client);
         return;
     }
     
@@ -191,6 +196,8 @@ void Server::_handleClientData(int client_fd)
         this->_removeClient(client_fd);
         return;
     }
+
+    //funcao para checar nicks iguais
     
     if (bytes_received <= 0)
     {
@@ -208,7 +215,7 @@ void Server::_handleClientData(int client_fd)
             client->cleanBuffer();
         }
         
-        // CONTINUE PARSING DATA
+        
     }
     
 }
@@ -268,13 +275,9 @@ int Server::parseCommand(const std::string& data)
     
     std::getline(iss, temp, ' ');
     if(temp == "JOIN")
-    {
-        logMessage(temp, RED," Code is: " + itoa(JOIN), YELLOW);
         return (JOIN);
-    }
     if(temp == "PRIVMSG")
         return (PRIVMSG);
-    
     if(temp == "NICK")
         return (NICK);
         
@@ -286,7 +289,7 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
     switch (command_code)
     {
     case JOIN:
-        /* code */
+        this->joinChannel(data, client_fd);
         break;
     case PRIVMSG:
         this->privateMsg(data, client_fd);
@@ -388,3 +391,66 @@ Client *Server::getClientByNick(std::string const &nick)
     return (NULL);
 }
 
+void Server::joinChannel(std::string const &data, int client_fd)
+{
+    std::string channelName;
+    std::string channelPassword = "";
+    
+    std::string unfilteredData = data.substr(5);
+    size_t pos = unfilteredData.find("\r\n");
+    
+    if(pos != std::string::npos)
+        unfilteredData.erase(pos, 2);     
+  
+    std::istringstream iss(unfilteredData);
+
+    iss >> channelName >> channelPassword;
+    
+    // if(this->_channels.empty())
+    // {
+    //     Channel *new_channel = new Channel(channelName, channelPassword);
+    //     this->_channels[channelName] = new_channel;
+    // }
+    // else if(this->getChannelByName(channelName) == NULL) // caso o canal nao esteja na lista
+    // {
+    //     Channel *new_channel = new Channel(channelName, channelPassword);
+    //     this->_channels[channelName] = new_channel;
+    // }
+    // else
+    // {
+    //     // se o canal estiver na lista entra nele
+    // }
+    
+
+    
+}
+
+Channel *Server::getChannelByName(std::string const &name)
+{
+    
+}
+
+
+void Server::_welcomeMessage(Client* client)
+{
+    
+    std::stringstream welcome;
+    welcome << "##############################\n";
+    welcome << "#   Bem-vindo ao IRC Server  #\n";
+    welcome << "#                            #\n";
+    welcome << "#  Comandos disponíveis:     #\n";
+    welcome << "#                            #\n";
+    welcome << "#  /JOIN #canal [senha]      #\n";
+    welcome << "#  /PRIVMSG alvo :mensagem   #\n";
+    welcome << "#  /NICK novonick            #\n";
+    welcome << "#  /QUIT                     #\n";
+    welcome << "##############################\n";
+    
+    std::string line;
+
+    while(getline(welcome, line, '\n'))
+    {
+        std::string msg = ":" + client->getHostname() + " 001 " + client->getNickname() + " :" + line + "\r\n";
+        send(client->getFd(), msg.c_str(), msg.length(), 0);
+    }
+}

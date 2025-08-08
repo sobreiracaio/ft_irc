@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/07 15:19:03 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/08 14:50:59 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,8 @@ class Server
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
         
+        //OTHERS
+        void _welcomeMessage(Client *client);
 
         
         
@@ -82,9 +84,14 @@ class Server
         Client *getClientByNick(std::string const &nick);
         void changeNick(std::string const &data, int client_fd);
         void privateMsg(std::string const &data, int client_fd);
+        void joinChannel(std::string const &data, int client_fd);
+
+        //CHANNEL MAMAGEMENT METHODS
+        Channel *getChannelByName(std::string const &name);
 
         //SERVER COMMANDS METHODS
         int parseCommand(const std::string& data);
         void executeCommand(int client_fd, int command_code, std::string const &data);
+        
         
 };
