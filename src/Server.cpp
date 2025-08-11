@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 16:55:44 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 18:45:20 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -457,6 +457,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         this->_channels[channelName] = new_channel;
         new_channel->addUser(this->getClient(client_fd)->getNickname());
         std::cout << "AQUI 1" << std::endl;
+        new_channel->connect(this, client_fd);
     }
     else if(this->getChannelByName(channelName) == NULL) // caso o canal nao esteja na lista
     {
@@ -464,6 +465,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         this->_channels[channelName] = new_channel;
         new_channel->addUser(this->getClient(client_fd)->getNickname());
         std::cout << "AQUI 2" << std::endl;
+        new_channel->connect(this, client_fd);
     }
     else 
     {
@@ -471,8 +473,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         existingChannel->addUser(this->getClient(client_fd)->getNickname());
         std::cout << "AQUI 3" << std::endl;
         
-        std::string teste_msg = ":" + this->getClient(client_fd)->getNickname() + "!" + this->getClient(client_fd)->getUsername() + "@" + this->getClient(client_fd)->getHostname() + " JOIN :" + existingChannel->getName() + "\r\n";
-        send(client_fd, teste_msg.c_str(), teste_msg.length(), 0); 
+        existingChannel->connect(this, client_fd);
         //usar os metodos de existing channel para criar a mensagem formatada irc para o client interpretar
         // se o canal estiver na lista entra nele
     }

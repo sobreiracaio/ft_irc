@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 15:33:12 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 18:42:59 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,9 @@
 #define NICK 102
 #define QUIT 103
 #define NO_COMM -1
+
+class Client;
+class Channel;
 
 class Server
 {
