@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 16:03:09 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 16:09:26 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,6 +186,8 @@ void Server::_handleClientData(int client_fd)
     if(client->getNickname().empty())
     {
         client->setNamesAndPass(data);
+        std::string nick = this->_checkDoubles(client->getNickname(), client_fd);
+        client->setNickname(nick);
         this->_welcomeMessage(client);
         return;
     }
