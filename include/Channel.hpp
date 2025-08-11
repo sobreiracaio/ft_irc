@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 16:18:38 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 12:51:48 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ class Channel
         std::string _welcome_msg;  //MESSAGE OF THE DAY
         std::string _password;
         std::vector<std::string> _userlist;
-        std::map<std::string, std::string> _registeredUsers; //<username, password>
+        
         
     
     public:

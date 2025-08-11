@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/06 14:04:39 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 15:18:57 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@
 #include <arpa/inet.h>
 #include <cstring>
 
-#include "Utils.hpp"
 
+#include "Utils.hpp"
 
 
 
@@ -37,6 +37,8 @@ class Client
 
         std::string _buffer;
 
+        bool _isOp;
+
     public:
         Client(int client_socket, sockaddr_in client_addr);
         ~Client();
@@ -52,13 +54,15 @@ class Client
 
         void setNickname(const std::string &nickname);
         
-
+        
         void appendBuffer(const std::string &data);
         bool isDataComplete() const;
         void cleanBuffer();
 
         void setNamesAndPass(const std::string &data);
 
+        void setOp (bool state);
+        bool getOp (void);
         
         
 

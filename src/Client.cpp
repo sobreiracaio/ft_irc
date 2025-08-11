@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 17:06:38 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 15:02:02 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,4 +112,14 @@ void Client::setNamesAndPass(std::string const &data)
             }
         }
 
+}
+
+void Client::setOp(bool state)
+{
+    this->_isOp = state;
+}
+
+bool Client::getOp()
+{
+    return this->_isOp;
 }

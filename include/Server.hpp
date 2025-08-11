@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 14:50:59 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 15:33:12 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,12 +63,12 @@ class Server
         void _acceptNewClient(void);
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
+        void _removeChannel(std::string const &channel_name);
         
         //OTHERS
         void _welcomeMessage(Client *client);
-
-        
-        
+        std::string _checkDoubles (std::string const &nickname, int client_fd);
+                
     
     public:
         Server(int port, std::string password);

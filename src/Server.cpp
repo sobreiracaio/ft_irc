@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/08 17:20:21 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 16:03:09 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,6 @@ void Server::_handleClientData(int client_fd)
     if(client->getNickname().empty())
     {
         client->setNamesAndPass(data);
-        //funcao para checar nicks iguais
         this->_welcomeMessage(client);
         return;
     }
@@ -281,6 +280,7 @@ int Server::parseCommand(const std::string& data)
         return (PRIVMSG);
     if(temp == "NICK")
         return (NICK);
+    
         
     return (NO_COMM);                
 }
@@ -296,8 +296,8 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
         this->privateMsg(data, client_fd);
         break;
     case NICK:
+        
         this->changeNick(data, client_fd);
-        //register nick function somewhere
         break;
     
         
@@ -307,11 +307,36 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
     return;
 }
 
+std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
+{
+    std::string modifiedNickname = nickname;
+    size_t pos = modifiedNickname.find('\r');
+    std::map<int, Client*>::iterator it;
+
+    if(pos && pos != std::string::npos)
+        modifiedNickname.erase(pos, 2);
+    
+    for (it = this->_clients.begin(); it != this->_clients.end(); it++)
+    {
+        Client *client = this->getClient(it->first);
+         
+        if((client->getNickname() == modifiedNickname) && client->getFd() != client_fd)
+        {
+            std::string msg = modifiedNickname + " :is already in use!" + "\r\n";
+            modifiedNickname += "_";
+            send(client_fd, msg.c_str(), msg.length(), 0);
+            
+        }
+    }
+    return (modifiedNickname);
+}
+
 void Server::changeNick(std::string const &data, int client_fd)
 {
     Client *tempClient = this->_clients[client_fd];
-
-    std::string nickname = data.substr(5);
+    
+    std::string nickname = this->_checkDoubles(data.substr(5), client_fd);
+    
     std::string old_nick = tempClient->getNickname();
     if(old_nick[old_nick.length() - 1] == '\n' || old_nick[old_nick.length() - 1] == '\r')
         old_nick.pop_back();
@@ -445,6 +470,9 @@ void Server::joinChannel(std::string const &data, int client_fd)
         Channel *existingChannel = this->getChannelByName(channelName);
         existingChannel->addUser(this->getClient(client_fd)->getNickname());
         std::cout << "AQUI 3" << std::endl;
+        
+        std::string teste_msg = ":" + this->getClient(client_fd)->getNickname() + "!" + this->getClient(client_fd)->getUsername() + "@" + this->getClient(client_fd)->getHostname() + " JOIN :" + existingChannel->getName() + "\r\n";
+        send(client_fd, teste_msg.c_str(), teste_msg.length(), 0); 
         //usar os metodos de existing channel para criar a mensagem formatada irc para o client interpretar
         // se o canal estiver na lista entra nele
     }
@@ -490,4 +518,9 @@ void Server::_welcomeMessage(Client* client)
         std::string msg = ":" + client->getHostname() + " 001 " + client->getNickname() + " :" + line + "\r\n";
         send(client->getFd(), msg.c_str(), msg.length(), 0);
     }
+}
+
+void Server::_removeChannel(std::string const &channel_name)
+{
+   
 }
