@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 16:09:26 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/11 16:55:44 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,7 +298,6 @@ void Server::executeCommand(int client_fd, int command_code, std::string const &
         this->privateMsg(data, client_fd);
         break;
     case NICK:
-        
         this->changeNick(data, client_fd);
         break;
     
@@ -324,10 +323,9 @@ std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
          
         if((client->getNickname() == modifiedNickname) && client->getFd() != client_fd)
         {
-            std::string msg = modifiedNickname + " :is already in use!" + "\r\n";
+            std::string msg = "Server: " + client->getHostname() +", Nickname: " + modifiedNickname + " is already in use!" + "\r\n";
             modifiedNickname += "_";
             send(client_fd, msg.c_str(), msg.length(), 0);
-            
         }
     }
     return (modifiedNickname);
