@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:47:16 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 18:07:17 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,5 +149,5 @@ class Server
         
         //Server command methods
         int parseCommand(const std::string& data);
-        void executeCommand(int client_fd, int command_code, std::string const &data);
+        bool executeCommand(int client_fd, int command_code, std::string const &data);
 };

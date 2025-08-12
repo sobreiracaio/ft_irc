@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:17:39 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 17:54:01 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ class Channel
         //Ban system
         bool banUser(std::string const &user);
         bool unbanUser(std::string const &user);
-        bool isBanned(std::string const &user);
+        bool isBanned(std::string const &user) const;
 
         //Invite system
         bool inviteUser(std::string const &user);

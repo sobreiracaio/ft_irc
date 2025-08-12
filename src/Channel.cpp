@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:52:16 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 17:53:45 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,7 +185,7 @@ bool Channel::unbanUser(std::string const &user)
     return (this->_banned.erase(user) > 0);
 }
 
-bool Channel::isBanned(std::string const &user)
+bool Channel::isBanned(std::string const &user) const
 {
     return (this->_banned.find(user) != this->_banned.end());
 }

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:49:04 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 18:10:07 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,6 +245,20 @@ void Server::_handleClientData(int client_fd)
         this->executeCommand(client_fd, command_code, complete_data);
         client->cleanBuffer();
     }
+    if(client->isDataComplete())
+    {
+        std::string complete_data = client->getBuffer();
+        int command_code = this->parseCommand(complete_data);
+        
+        // Execute command and check if the client was removed
+        bool client_still_exists = this->executeCommand(client_fd, command_code, complete_data);
+        
+        if (client_still_exists)
+        {
+            client->cleanBuffer();
+        }
+        // If client_still_exists is false, it wont try to access client again
+    }
 }
 
 void Server::_removeClient(int client_fd)
@@ -408,40 +422,49 @@ int Server::parseCommand(const std::string& data)
     return NO_COMM;
 }
 
-void Server::executeCommand(int client_fd, int command_code, std::string const &data)
+bool Server::executeCommand(int client_fd, int command_code, std::string const &data)
 {
     switch (command_code)
     {
     case JOIN:
         this->joinChannel(data, client_fd);
-        break;
+        return true; 
+        
     case PRIVMSG:
         this->privateMsg(data, client_fd);
-        break;
+        return true;
+        
     case NICK:
         this->changeNick(data, client_fd);
-        break;
+        return true;
+        
     case QUIT:
         this->quitServer(data, client_fd);
-        break;
+        return false; //client removed
+        
     case PART:
         this->partChannel(data, client_fd);
-        break;
+        return true;
+        
     case KICK:
         this->kickUser(data, client_fd);
-        break;
+        return true;
+        
     case INVITE:
         this->inviteUser(data, client_fd);
-        break;
+        return true;
+        
     case TOPIC:
         this->topicCommand(data, client_fd);
-        break;
+        return true;
+        
     case MODE:
         this->modeCommand(data, client_fd);
-        break;
+        return true;
+        
     default:
         this->_sendErrorReply(client_fd, ERR_UNKNOWNCOMMAND, "Unknown command");
-        break;
+        return true;
     }
 }
 
@@ -1109,7 +1132,7 @@ void Server::handleChannelMode(std::string const &data, int client_fd)
                     break;
                     
                 default:
-                    this->_sendErrorReply(client_fd, ERR_UNKNOWNMODE, std::string(1, c) + " :is unknown mode char to me");
+                    //this->_sendErrorReply(client_fd, ERR_UNKNOWNMODE, std::string(1, c) + " :is unknown mode char to me");
                     continue;
             }
             
