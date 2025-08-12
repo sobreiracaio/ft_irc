@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 14:35:37 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 17:47:16 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,10 @@
 #define PART 104
 #define PASS 105
 #define USER 106
+#define KICK 107
+#define INVITE 108
+#define TOPIC 109
+#define MODE 110
 #define NO_COMM -1
 
 
@@ -63,10 +67,14 @@
 #define ERR_NONICKNAMEGIVEN 431
 #define ERR_ERRONEUSNICKNAME 432
 #define ERR_NICKNAMEINUSE 433
+#define ERR_USERNOTINCHANNEL 441
+#define ERR_NOTONCHANNEL 442
+#define ERR_USERONCHANNEL 443
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTRED 462
 #define ERR_PASSWDMISMATCH 464
-
+#define ERR_UNKNOWNMODE 472
+#define ERR_CHANOPRIVSNEEDED 482
 
 class Client;
 class Channel;
@@ -129,10 +137,16 @@ class Server
         void joinChannel(std::string const &data, int client_fd);
         void partChannel(std::string const &data, int client_fd);
         void quitServer(std::string const &data, int client_fd);
+        void kickUser(std::string const &data, int client_fd);
+        void inviteUser(std::string const &data, int client_fd);
+        
 
         //Channel management methods
         Channel *getChannelByName(std::string const &name);
-
+        void topicCommand(std::string const &data, int client_fd);
+        void modeCommand(std::string const &data, int client_fd);
+        void handleChannelMode(std::string const &data, int client_fd);
+        
         //Server command methods
         int parseCommand(const std::string& data);
         void executeCommand(int client_fd, int command_code, std::string const &data);
