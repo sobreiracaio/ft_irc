@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 19:38:47 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 19:57:15 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,6 @@ void Server::_handleClientData(int client_fd)
     char buffer[BUFFER_SIZE];
     Client *client = getClient(client_fd);
     
-    
     if (!client)
         return;
     
@@ -214,16 +213,16 @@ void Server::_handleClientData(int client_fd)
         return;        
     }
     
-    buffer[bytes_received] = '\0'; //Make sure the string has finished
+    buffer[bytes_received] = '\0';
     std::string data(buffer);
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
-    //If client is not yet registered
+    // Se cliente não está registrado
     if(client->getNickname().empty())
     {
         client->setNamesAndPass(data);
         
-        //Verifies if pass is matching before continues
+        // Verifica se a senha está correta
         if(!this->_checkPassword(client->getPassword()))
         {
             this->_sendErrorReply(client_fd, ERR_PASSWDMISMATCH, "Password incorrect!");
@@ -239,35 +238,35 @@ void Server::_handleClientData(int client_fd)
     
     client->appendBuffer(data);
     
-    if(client->isDataComplete())
+    // CORREÇÃO: Loop para processar todas as mensagens completas no buffer
+    while(client->isDataComplete())
     {
-        std::string complete_data = client->getBuffer();
-        int command_code = this->parseCommand(complete_data);
-        this->executeCommand(client_fd, command_code, complete_data);
-        client->cleanBuffer();
-    }
-    if(client->isDataComplete())
-    {
-        std::string complete_data = client->getBuffer();
-        int command_code = this->parseCommand(complete_data);
+        std::string message = client->getNextCompleteMessage();
+        
+        if (message.empty())
+            break;
+            
+        int command_code = this->parseCommand(message);
         
         // Execute command and check if the client was removed
-        bool client_still_exists = this->executeCommand(client_fd, command_code, complete_data);
+        bool client_still_exists = this->executeCommand(client_fd, command_code, message);
         
-        if (client_still_exists)
+        if (!client_still_exists)
         {
-            client->cleanBuffer();
+            return; // Cliente foi removido, não tenta acessar mais
         }
-        // If client_still_exists is false, it wont try to access client again
+        
+        // Verifica se o cliente ainda existe após execução do comando
+        client = getClient(client_fd);
+        if (!client)
+            return; // Cliente foi removido, sair imediatamente
     }
 }
 
 void Server::_removeClient(int client_fd)
 {
+    // Remove from poll fds first
     std::vector<struct pollfd>::iterator poll_it;
-    std::map<int, Client*>::iterator client_it;
-
-    
     for (poll_it = this->_poll_fds.begin(); poll_it != this->_poll_fds.end(); poll_it++)
     {
         if(poll_it->fd == client_fd)
@@ -277,16 +276,50 @@ void Server::_removeClient(int client_fd)
         }   
     }
     
-    client_it = this->_clients.find(client_fd);
+    // Find and remove client
+    std::map<int, Client*>::iterator client_it = this->_clients.find(client_fd);
     if (client_it != this->_clients.end())
     {
-        delete client_it->second;
+        Client *client = client_it->second;
+        
+        // Remove client from all channels before deleting
+        if (client)
+        {
+            std::set<std::string> client_channels = client->getChannels();
+            std::string client_nick = client->getNickname();
+            
+            for (std::set<std::string>::const_iterator it = client_channels.begin(); 
+                 it != client_channels.end(); ++it)
+            {
+                std::string channel_name = *it;
+                if (channel_name[0] == '#')
+                    channel_name = channel_name.substr(1);
+                    
+                Channel *channel = getChannelByName(channel_name);
+                if (channel)
+                {
+                    channel->removeUser(client_nick);
+                    
+                    // Remove empty channels
+                    if (channel->isEmpty())
+                    {
+                        delete channel;
+                        _channels.erase(channel_name);
+                        logMessage("Empty channel removed: ", YELLOW, channel_name, RED);
+                    }
+                }
+            }
+        }
+        
+        // Now safe to delete client
+        delete client;
         this->_clients.erase(client_it);
     }
 
     close(client_fd);
     logMessage("Client removed! FD = ", RED, itoa(client_fd), YELLOW);
 }
+
 
 bool Server::_checkPassword(std::string const &client_pass)
 {
@@ -375,12 +408,13 @@ void Server::_sendErrorReply(int client_fd, int code, const std::string &message
 
 Client *Server::getClient(int client_fd)
 {
-    std::map<int, Client*>::iterator it = this->_clients.find(client_fd); 
+     std::map<int, Client*>::iterator it = this->_clients.find(client_fd); 
     
-    if (it != this->_clients.end())
+    // Verificação mais robusta: existe no mapa E o ponteiro não é nulo
+    if (it != this->_clients.end() && it->second != NULL)
         return it->second;
     else
-        return (NULL);
+        return NULL;
 }
 
 int Server::getServerFd(void)

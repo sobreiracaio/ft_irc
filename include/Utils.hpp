@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:52:39 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:22:35 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 20:02:55 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 #define WHITE   "\033[37m"
 #define YELLOW  "\033[33m"
 #define GREEN   "\033[32m"
-#define BLUE    "\033[34m"
+#define BLUE    "\033[38;5;110m"
 #define RED     "\033[31m"
 #define CYAN    "\033[36m"
 #define MAGENTA "\033[35m"
