@@ -6,21 +6,31 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 15:02:02 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 15:20:20 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
 
-Client::Client(int client_socket, sockaddr_in client_addr):_client_fd(client_socket), _client_addr(client_addr)
+Client::Client(int client_socket, sockaddr_in client_addr) 
+    : _client_fd(client_socket), _client_addr(client_addr), _isOp(false), 
+      _isRegistered(false), _hasPassword(false), _hasNick(false), _hasUser(false)
 {
+    //Converts IP address to string in a secure way
     char ip_str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, INET6_ADDRSTRLEN);
-    this->_hostname = std::string(ip_str);
+    if (inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, INET_ADDRSTRLEN) != NULL)
+        this->_hostname = std::string(ip_str);
+    else
+        this->_hostname = "unknown";
+    
     logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
 }
 
-Client::~Client(){}
+Client::~Client()
+{
+    if(this->_client_fd > 0)
+        close(this->_client_fd);
+}
 
 int Client::getFd() const
 {
@@ -57,19 +67,62 @@ std::string Client::getBuffer() const
     return this->_buffer;
 }
 
+bool Client::isOperator() const
+{
+    return (this->_isOp);
+}
+
+bool Client::isRegistered() const
+{
+    return (this->_isRegistered);
+}
+
 void Client::setNickname(const std::string &nickname)
 {
     std::string formattedNick = nickname; 
-    std::string::size_type pos;
-
-    pos = formattedNick.find("\r\n");
+    
+    // Remove control chars
+    size_t pos = formattedNick.find_first_of("\r\n");
     if (pos != std::string::npos)
-        formattedNick.erase(pos, 2);
+        formattedNick.erase(pos);
+    
+    // Remove extra spaces
+    pos = formattedNick.find(' ');
+    if (pos != std::string::npos)
+        formattedNick.erase(pos);
+        
     this->_nickname = formattedNick;
+    this->_hasNick = !formattedNick.empty();
+    this->checkRegistrationComplete();
+}
+
+void Client::setUsername(const std::string &username)
+{
+    this->_username = username;
+    this->_hasUser = !username.empty();
+    this->checkRegistrationComplete();
+}
+
+void Client::setRealname(const std::string &realname)
+{
+    this->_realname = realname;
+}
+
+void Client::setOperator(bool state)
+{
+    this->_isOp = state;
 }
 
 void Client::appendBuffer(const std::string &data)
 {
+    // Prevent buffer overflow
+    if (this->_buffer.length() + data.length() > MAX_BUFFER_SIZE)
+    {
+        logMessage("WARNING: ", YELLOW, "Buffer overflow prevented for client FD=" + itoa(_client_fd), WHITE);
+        this->_buffer.clear(); // Limpa buffer para evitar problemas
+        return;
+    }
+    
     this->_buffer += data;
 }
 
@@ -83,43 +136,144 @@ void Client::cleanBuffer()
     this->_buffer.clear();
 }
 
+std::string Client::getNextCompleteMessage()
+{
+    std::string message;
+    size_t pos = this->_buffer.find("\r\n");
+    
+    if (pos == std::string::npos)
+        pos = this->_buffer.find("\n");
+    
+    if (pos != std::string::npos)
+    {
+        message = this->_buffer.substr(0, pos);
+        this->_buffer.erase(0, pos + (this->_buffer[pos] == '\r' ? 2 : 1));
+    }
+    
+    return message;
+}
+
 void Client::setNamesAndPass(std::string const &data)
 {
-        std::istringstream iss(data);
-        std::string line;
-    
-        while(std::getline(iss, line, '\n'))
+       std::istringstream iss(data);
+    std::string line;
+
+    while(std::getline(iss, line))
+    {
+        // Remove \r if its present
+        if(!line.empty() && line[line.length() - 1] == '\r')
+            line.erase(line.length() - 1);
+        
+        if (line.empty())
+            continue;
+        
+        // Parse different register commands
+        if (line.length() >= 5)
         {
-            if(!line.empty() && line[line.length() - 1] == '\r')
-                line.erase(line.length() - 1);
-            
             std::string cmd = line.substr(0, 5);
             
-            
             if(cmd == "PASS ")
-                this->_password = line.substr(5);
-            if(cmd == "NICK ")
-                this->setNickname(line.substr(5)); 
-            if(cmd == "USER ")
+                this->_parsePassCommand(line);
+            else if(cmd == "NICK ")
+                this->_parseNickCommand(line);
+            else if(cmd == "USER ")
+                this->_parseUserCommand(line);
+        }
+    }
+}
+
+void Client::_parsePassCommand(const std::string &line)
+{
+    if (line.length() > 5)
+    {
+        this->_password = line.substr(5);
+        // Remove spaces and control chars at the end
+        size_t end = this->_password.find_last_not_of(" \t\r\n");
+        if (end != std::string::npos)
+            this->_password = this->_password.substr(0, end + 1);
+        
+        this->_hasPassword = !this->_password.empty();
+    }
+}
+
+void Client::_parseNickCommand(const std::string &line)
+{
+    if (line.length() > 5)
+        this->setNickname(line.substr(5));
+}
+
+void Client::_parseUserCommand(const std::string &line)
+{
+    if (line.length() > 5)
+    {
+        std::istringstream temp_iss(line.substr(5));
+        std::string username, mode, unused, realname_part;
+        
+        // Format: USER <username> <mode> <unused> :<realname>
+        if (temp_iss >> username >> mode >> unused)
+        {
+            this->setUsername(username);
+            
+            //Gets the rest of the line as realname (after ":")
+            std::string remaining;
+            std::getline(temp_iss, remaining);
+            
+            size_t colon_pos = remaining.find(':');
+            if (colon_pos != std::string::npos)
             {
-                std::istringstream temp_iss(line.substr(5));
-                std::string temp;
-                std::getline(temp_iss, temp, ' ');
-                this->_username = temp;
-                std::getline(temp_iss, temp, '\n');
-                this->_realname = temp.substr(5);
-                
+                this->setRealname(remaining.substr(colon_pos + 1));
             }
         }
-
+    }
 }
 
-void Client::setOp(bool state)
+void Client::checkRegistrationComplete()
 {
-    this->_isOp = state;
+    // Client is properly registered when it has nick, user and password
+    bool was_registered = this->_isRegistered;
+    this->_isRegistered = (this->_hasNick && this->_hasUser && this->_hasPassword);
+    
+    if (!was_registered && this->_isRegistered)
+    {
+        logMessage("Client registration complete! Nick: ", GREEN, this->_nickname, BLUE);
+    }
 }
 
-bool Client::getOp()
+void Client::joinChannel(const std::string &channelName)
 {
-    return this->_isOp;
+    this->_channels.insert(channelName);
+}
+
+void Client::leaveChannel(const std::string &channelName)
+{
+    this->_channels.erase(channelName);
+}
+
+bool Client::isInChannel(const std::string &channelName) const
+{
+    return (this->_channels.find(channelName) != this->_channels.end());
+}
+
+std::set<std::string> Client::getChannels() const
+{
+    return this->_channels;
+}
+
+
+bool Client::isValidInput(const std::string &input) const
+{
+    // Verifies if data inserted has harmful control caracters
+    for (size_t i = 0; i < input.length(); i++)
+    {
+        unsigned char c = static_cast<unsigned char>(input[i]);
+        
+        // Allow only printable chars and some control chars
+        if (c < 32 && c != '\r' && c != '\n' && c != '\t')
+            return false;
+            
+        // NULL control char is not allowed
+        if (c == 0)
+            return false;
+    }
+    return true;
 }

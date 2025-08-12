@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/11 18:42:59 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 14:35:37 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,18 +26,47 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <sstream>
+#include <algorithm>
+#include <iomanip>
 
 #include "Utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 
 #define BUFFER_SIZE 4096
+#define MAX_NICK_LENGTH 30      
+#define MAX_CHANNEL_NAME 50
 
+
+// IRC COMMAND CODES - ARBITRARY
 #define JOIN 100
 #define PRIVMSG 101
 #define NICK 102
 #define QUIT 103
+#define PART 104
+#define PASS 105
+#define USER 106
 #define NO_COMM -1
+
+
+// IRC REPLY CODE - RFC 1459 PROTOCOL
+#define RPL_WELCOME 001
+#define RPL_NAMREPLY 353
+#define RPL_ENDOFNAMES 366
+#define ERR_NOSUCHNICK 401
+#define ERR_NOSUCHCHANNEL 403
+#define ERR_CANNOTSENDTOCHAN 404
+#define ERR_NORECIPIENT 411
+#define ERR_NOTEXTTOSEND 412
+#define ERR_UNKNOWNCOMMAND 421
+#define ERR_NONICKNAMEGIVEN 431
+#define ERR_ERRONEUSNICKNAME 432
+#define ERR_NICKNAMEINUSE 433
+#define ERR_NEEDMOREPARAMS 461
+#define ERR_ALREADYREGISTRED 462
+#define ERR_PASSWDMISMATCH 464
+
 
 class Client;
 class Channel;
@@ -53,6 +82,7 @@ class Server
         std::vector<struct pollfd> _poll_fds;
         std::map<int, Client*> _clients;
         std::map<std::string, Channel*> _channels;
+        std::string _server_name;
         
         
     
@@ -66,35 +96,44 @@ class Server
         void _acceptNewClient(void);
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
-        void _removeChannel(std::string const &channel_name);
         
-        //OTHERS
+        //Message handling
+        void _sendNumericReply(int client_fd, int code, const std::string &message);
+        void _sendErrorReply(int client_fd, int code, const std::string &message);
         void _welcomeMessage(Client *client);
         std::string _checkDoubles (std::string const &nickname, int client_fd);
-                
+        
+        //Input validation
+        bool _isValidNickname(const std::string &nickname);
+        bool _isValidChannelName(const std::string &channelName);
+        std::vector<std::string> _splitMessage(const std::string &message);
+        
+        
+                      
     
     public:
         Server(int port, std::string password);
         ~Server();
 
-        //MAIN PUBLIC METHODS
+        //Main public methods
         bool serverInit(void);
         void run(void);
         int getServerFd(void);
+        std::string getServerName(void) const;
         
-        //CLIENT MANAGEMENT METHODS
+        //Client management methods
         Client *getClient(int client_fd);
         Client *getClientByNick(std::string const &nick);
         void changeNick(std::string const &data, int client_fd);
         void privateMsg(std::string const &data, int client_fd);
         void joinChannel(std::string const &data, int client_fd);
+        void partChannel(std::string const &data, int client_fd);
+        void quitServer(std::string const &data, int client_fd);
 
-        //CHANNEL MAMAGEMENT METHODS
+        //Channel management methods
         Channel *getChannelByName(std::string const &name);
 
-        //SERVER COMMANDS METHODS
+        //Server command methods
         int parseCommand(const std::string& data);
         void executeCommand(int client_fd, int command_code, std::string const &data);
-        
-        
 };
