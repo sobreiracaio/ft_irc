@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 18:35:48 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 19:38:47 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,6 +238,7 @@ void Server::_handleClientData(int client_fd)
     }
     
     client->appendBuffer(data);
+    
     if(client->isDataComplete())
     {
         std::string complete_data = client->getBuffer();
@@ -537,10 +538,42 @@ void Server::quitServer(std::string const &data, int client_fd)
     if (colon_pos != std::string::npos)
         quit_msg = data.substr(colon_pos + 1);
     
-    // Notificar outros clientes nos mesmos canais
-    // (implementação simplificada - deveria notificar apenas canais em comum)
+    // Obter lista de canais ANTES de remover o cliente
+    std::set<std::string> client_channels = client->getChannels();
+    std::string client_nick = client->getNickname();
+    std::string client_user = client->getUsername();
+    std::string client_host = client->getHostname();
     
-    logMessage("Client quit! Nick: ", YELLOW, client->getNickname(), GREEN);
+    // Notificar canais sobre o QUIT
+    for (std::set<std::string>::const_iterator it = client_channels.begin(); 
+         it != client_channels.end(); ++it)
+    {
+        std::string channel_name = *it;
+        if (channel_name[0] == '#')
+            channel_name = channel_name.substr(1);
+            
+        Channel *channel = getChannelByName(channel_name);
+        if (channel)
+        {
+            // Remove usuário do canal
+            channel->removeUser(client_nick);
+            
+            // Anuncia QUIT para outros usuários do canal
+            channel->announceQuit(this, client, quit_msg);
+            
+            // Remove canal se vazio
+            if (channel->isEmpty())
+            {
+                delete channel;
+                _channels.erase(channel_name);
+                logMessage("Empty channel removed: ", YELLOW, channel_name, RED);
+            }
+        }
+    }
+    
+    logMessage("Client quit! Nick: ", YELLOW, client_nick, GREEN);
+    
+    // IMPORTANTE: Remove cliente por último
     this->_removeClient(client_fd);
 }
 
@@ -738,22 +771,26 @@ void Server::privateMsg(std::string const &data, int client_fd)
             return;
         }
         
-        // Check if user can send to channel
+        // Verificar se o usuário está no canal (para +n mode)
         if (channel->hasMode(MODE_NO_EXTERNAL_MSGS) && !channel->hasUser(sender->getNickname()))
         {
             this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
             return;
         }
         
+        // Verificar modo moderado
         if (channel->hasMode(MODE_MODERATED) && !channel->isOp(sender->getNickname()))
         {
             this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
             return;
         }
         
-        // Send message to channel
+        // Enviar mensagem para o canal (excluindo o remetente)
         std::string sender_prefix = sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname();
         channel->sendMessage(this, sender_prefix, message);
+        
+        // IMPORTANTE: NÃO envie confirmação de volta para o sender
+        // O cliente IRC já mostra localmente a mensagem que o usuário digitou
     }
     else
     {
@@ -819,22 +856,88 @@ void Server::joinChannel(std::string const &data, int client_fd)
         return;
     }
     
+    Client *client = getClient(client_fd);
+    if (!client)
+        return;
+    
+    // Verificar se já está no canal
+    if (client->isInChannel("#" + channelName))
+        return;
+    
     Channel *channel = this->getChannelByName(channelName);
+    bool is_new_channel = false;
     
     if (!channel)
     {
         // Criar novo canal
-        Channel *new_channel = new Channel(channelName, channelPassword);
-        this->_channels[channelName] = new_channel;
-        new_channel->addUser(this->getClient(client_fd)->getNickname());
-        new_channel->connect(this, client_fd);
+        channel = new Channel(channelName, channelPassword);
+        this->_channels[channelName] = channel;
+        is_new_channel = true;
     }
-    else
+    
+    // Verificar se pode entrar no canal
+    if (!channel->canUserJoin(client->getNickname(), channelPassword))
     {
-        // Entrar em canal existente
-        channel->addUser(this->getClient(client_fd)->getNickname());
-        channel->connect(this, client_fd);
+        // Enviar erro específico baseado no motivo
+        if (channel->isBanned(client->getNickname()))
+            this->_sendErrorReply(client_fd, ERR_BANNEDFROMCHAN, "#" + channelName + " :Cannot join channel (+b)");
+        else if (channel->hasMode(MODE_INVITE_ONLY) && !channel->isInvited(client->getNickname()))
+            this->_sendErrorReply(client_fd, ERR_INVITEONLYCHAN, "#" + channelName + " :Cannot join channel (+i)");
+        else if (channel->hasMode(MODE_LIMIT) && channel->getUserLimit() > 0 && channel->getUserCount() >= channel->getUserLimit())
+            this->_sendErrorReply(client_fd, ERR_CHANNELISFULL, "#" + channelName + " :Cannot join channel (+l)");
+        else if (channel->hasMode(MODE_KEY) && !channel->getKey().empty() && channelPassword != channel->getKey())
+            this->_sendErrorReply(client_fd, ERR_BADCHANNELKEY, "#" + channelName + " :Cannot join channel (+k)");
+        else
+            this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" + channelName + " :Cannot join channel");
+        return;
     }
+    
+    // Adicionar usuário ao canal
+    channel->addUser(client->getNickname(), channelPassword);
+    client->joinChannel("#" + channelName);
+    
+    // Anunciar JOIN para todos no canal (incluindo quem entrou)
+    std::string join_msg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + 
+                          client->getHostname() + " JOIN #" + channelName + "\r\n";
+    
+    // Enviar JOIN para TODOS os usuários do canal
+    std::vector<std::string> users = channel->getUserList();
+    for (size_t i = 0; i < users.size(); i++)
+    {
+        Client *user = getClientByNick(users[i]);
+        if (user)
+        {
+            if (send(user->getFd(), join_msg.c_str(), join_msg.length(), 0) == -1)
+                logMessage("ERROR: ", RED, "Failed to send JOIN message", YELLOW, ERR);
+        }
+    }
+    
+    // Enviar tópico se existir
+    if (!channel->getTopic().empty())
+    {
+        std::string topic_msg = ":" + _server_name + " 332 " + client->getNickname() + 
+                               " #" + channelName + " :" + channel->getTopic() + "\r\n";
+        send(client_fd, topic_msg.c_str(), topic_msg.length(), 0);
+    }
+    
+    // Enviar lista NAMES atualizada para TODOS os usuários do canal
+    std::string names_list = channel->getUserListString();
+    for (size_t i = 0; i < users.size(); i++)
+    {
+        Client *user = getClientByNick(users[i]);
+        if (user)
+        {
+            std::string names_msg = ":" + _server_name + " 353 " + user->getNickname() + 
+                                   " = #" + channelName + " :" + names_list + "\r\n";
+            std::string end_names = ":" + _server_name + " 366 " + user->getNickname() + 
+                                   " #" + channelName + " :End of /NAMES list\r\n";
+            
+            send(user->getFd(), names_msg.c_str(), names_msg.length(), 0);
+            send(user->getFd(), end_names.c_str(), end_names.length(), 0);
+        }
+    }
+    
+    logMessage("User joined channel ", GREEN, channelName + ": " + client->getNickname(), BLUE);
 }
 
 void Server::partChannel(std::string const &data, int client_fd)

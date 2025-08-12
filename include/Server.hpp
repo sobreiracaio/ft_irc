@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 18:07:17 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 19:30:27 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,11 @@
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTRED 462
 #define ERR_PASSWDMISMATCH 464
+#define ERR_CHANNELISFULL 471
 #define ERR_UNKNOWNMODE 472
+#define ERR_INVITEONLYCHAN 473
+#define ERR_BANNEDFROMCHAN 474
+#define ERR_BADCHANNELKEY 475
 #define ERR_CHANOPRIVSNEEDED 482
 
 class Client;

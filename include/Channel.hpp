@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 17:54:01 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 19:26:38 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,7 @@ class Channel
         std::string getTopic() const;
         std::string getWelcomeMsg() const;
         std::string getPassword() const;
+        std::string getKey() const;
         size_t getUserCount() const;
         size_t getUserLimit() const;
         time_t getCreationTime() const;

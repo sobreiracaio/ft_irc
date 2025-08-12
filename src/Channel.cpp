@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 18:51:20 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/12 19:27:30 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,11 @@ std::string Channel::getWelcomeMsg() const
 std::string Channel::getPassword() const
 {
     return this->_password;
+}
+
+std::string Channel::getKey() const
+{
+    return this->_key;
 }
 
 size_t Channel::getUserCount() const
@@ -326,11 +331,18 @@ bool Channel::connect(Server *server, int client_fd)
 
 void Channel::sendMessage(Server *server, const std::string &sender, std::string const msg)
 {
-    std::string formatted_msg = ":" + sender + " PRIVMSG #" + this->_name + " " + msg + "\r\n";
+    // Parse sender para extrair apenas o nickname
+    std::string sender_nick = sender;
+    size_t exclamation = sender.find('!');
+    if (exclamation != std::string::npos)
+        sender_nick = sender.substr(0, exclamation);
     
-    for (std::set<std::string>::const_iterator it = this->_userlist.begin(); it != this->_userlist.end(); ++it)
+    std::string formatted_msg = ":" + sender + " PRIVMSG #" + _name + " " + msg + "\r\n";
+    
+    for (std::set<std::string>::const_iterator it = _userlist.begin(); it != _userlist.end(); ++it)
     {
-        if (*it == sender) // Don't send to sender
+        // NÃO enviar para quem mandou a mensagem
+        if (*it == sender_nick)
             continue;
             
         Client *client = server->getClientByNick(*it);
