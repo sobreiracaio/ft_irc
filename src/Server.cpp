@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 19:57:15 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/13 12:43:18 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -498,7 +498,7 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
         return true;
         
     default:
-        this->_sendErrorReply(client_fd, ERR_UNKNOWNCOMMAND, "Unknown command");
+        //this->_sendErrorReply(client_fd, ERR_UNKNOWNCOMMAND, "Unknown command");
         return true;
     }
 }
@@ -572,13 +572,13 @@ void Server::quitServer(std::string const &data, int client_fd)
     if (colon_pos != std::string::npos)
         quit_msg = data.substr(colon_pos + 1);
     
-    // Obter lista de canais ANTES de remover o cliente
+    // Gets channel list before removing client
     std::set<std::string> client_channels = client->getChannels();
     std::string client_nick = client->getNickname();
     std::string client_user = client->getUsername();
     std::string client_host = client->getHostname();
     
-    // Notificar canais sobre o QUIT
+    // Notify channels about the quitting
     for (std::set<std::string>::const_iterator it = client_channels.begin(); 
          it != client_channels.end(); ++it)
     {
@@ -589,13 +589,13 @@ void Server::quitServer(std::string const &data, int client_fd)
         Channel *channel = getChannelByName(channel_name);
         if (channel)
         {
-            // Remove usuário do canal
+            // Remove user from channel
             channel->removeUser(client_nick);
             
             // Anuncia QUIT para outros usuários do canal
             channel->announceQuit(this, client, quit_msg);
             
-            // Remove canal se vazio
+            // Remove channel if it is empty
             if (channel->isEmpty())
             {
                 delete channel;
@@ -607,7 +607,7 @@ void Server::quitServer(std::string const &data, int client_fd)
     
     logMessage("Client quit! Nick: ", YELLOW, client_nick, GREEN);
     
-    // IMPORTANTE: Remove cliente por último
+    // Removes client
     this->_removeClient(client_fd);
 }
 
@@ -805,26 +805,24 @@ void Server::privateMsg(std::string const &data, int client_fd)
             return;
         }
         
-        // Verificar se o usuário está no canal (para +n mode)
+        //Verify is user is in channel (for +n mode)
         if (channel->hasMode(MODE_NO_EXTERNAL_MSGS) && !channel->hasUser(sender->getNickname()))
         {
             this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
             return;
         }
         
-        // Verificar modo moderado
+        // Verify moderated mode
         if (channel->hasMode(MODE_MODERATED) && !channel->isOp(sender->getNickname()))
         {
             this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
             return;
         }
         
-        // Enviar mensagem para o canal (excluindo o remetente)
+        // Send message to channel, excluding sender (to avoid double message for the sender)
         std::string sender_prefix = sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname();
         channel->sendMessage(this, sender_prefix, message);
         
-        // IMPORTANTE: NÃO envie confirmação de volta para o sender
-        // O cliente IRC já mostra localmente a mensagem que o usuário digitou
     }
     else
     {
@@ -848,7 +846,7 @@ Client *Server::getClientByNick(std::string const &nick)
 {
     std::string formattedNick = nick;
     
-    // Remove espaços e quebras de linha
+    // Remove spaces and other chars
     size_t pos = formattedNick.find_first_of(" \r\n");
     if (pos != std::string::npos)
         formattedNick.erase(pos);
@@ -882,7 +880,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         return;
     }
     
-    channelName = channelName.substr(1); // Remove o #
+    channelName = channelName.substr(1); // Remove the #
     
     if (!_isValidChannelName(channelName))
     {
@@ -894,7 +892,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
     if (!client)
         return;
     
-    // Verificar se já está no canal
+    // Verify if the client is already on channel
     if (client->isInChannel("#" + channelName))
         return;
     
@@ -903,16 +901,16 @@ void Server::joinChannel(std::string const &data, int client_fd)
     
     if (!channel)
     {
-        // Criar novo canal
+        // Create new channel
         channel = new Channel(channelName, channelPassword);
         this->_channels[channelName] = channel;
         is_new_channel = true;
     }
     
-    // Verificar se pode entrar no canal
+    // Verify if client can join channel
     if (!channel->canUserJoin(client->getNickname(), channelPassword))
     {
-        // Enviar erro específico baseado no motivo
+        // Send error based on reason of not joining
         if (channel->isBanned(client->getNickname()))
             this->_sendErrorReply(client_fd, ERR_BANNEDFROMCHAN, "#" + channelName + " :Cannot join channel (+b)");
         else if (channel->hasMode(MODE_INVITE_ONLY) && !channel->isInvited(client->getNickname()))
@@ -926,15 +924,15 @@ void Server::joinChannel(std::string const &data, int client_fd)
         return;
     }
     
-    // Adicionar usuário ao canal
+    // Add user to channel
     channel->addUser(client->getNickname(), channelPassword);
     client->joinChannel("#" + channelName);
     
-    // Anunciar JOIN para todos no canal (incluindo quem entrou)
+    //Announce to everybody on channel that a new client has arrived
     std::string join_msg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + 
                           client->getHostname() + " JOIN #" + channelName + "\r\n";
     
-    // Enviar JOIN para TODOS os usuários do canal
+    
     std::vector<std::string> users = channel->getUserList();
     for (size_t i = 0; i < users.size(); i++)
     {
@@ -946,7 +944,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         }
     }
     
-    // Enviar tópico se existir
+    // Show topic if it exists
     if (!channel->getTopic().empty())
     {
         std::string topic_msg = ":" + _server_name + " 332 " + client->getNickname() + 
@@ -954,7 +952,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
         send(client_fd, topic_msg.c_str(), topic_msg.length(), 0);
     }
     
-    // Enviar lista NAMES atualizada para TODOS os usuários do canal
+    //Send Names list to everybody on channel (updates list)
     std::string names_list = channel->getUserListString();
     for (size_t i = 0; i < users.size(); i++)
     {
@@ -1143,7 +1141,6 @@ void Server::modeCommand(std::string const &data, int client_fd)
     }
     else
     {
-        // User mode (não implementado completamente)
         this->_sendErrorReply(client_fd, ERR_UNKNOWNMODE, "User modes not implemented");
     }
 }
