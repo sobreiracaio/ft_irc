@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 19:27:30 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:17:55 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,22 +95,31 @@ void Channel::setWelcomeMsg(std::string const &msg)
 // User management
 bool Channel::addUser(std::string const &user, std::string const &password)
 {
-    if (this->_userlist.find(user) != this->_userlist.end())
-        return false; // User already in channel
+    // Remove espaços e caracteres de controle do nome do usuário
+    std::string cleanUser = user;
+    size_t pos = cleanUser.find_first_of(" \r\n\t");
+    if (pos != std::string::npos)
+        cleanUser.erase(pos);
     
-    if (!canUserJoin(user, password))
+    if (cleanUser.empty())
         return false;
     
-    this->_userlist.insert(user);
+    if (this->_userlist.find(cleanUser) != this->_userlist.end())
+        return true; // Usuário já estava no canal - não é erro
+    
+    if (!canUserJoin(cleanUser, password))
+        return false;
+    
+    this->_userlist.insert(cleanUser);
     
     // First user becomes operator
     if (this->_userlist.size() == 1)
-        this->_operators.insert(user);
+        this->_operators.insert(cleanUser);
     
     // Remove from invite list if present
-    this->_invited.erase(user);
+    this->_invited.erase(cleanUser);
     
-    logMessage("User joined channel ", GREEN,this->_name + ": " + user, BLUE);
+    logMessage("User joined channel ", GREEN, this->_name + ": " + cleanUser, BLUE);
     return true;
 }
 
@@ -436,4 +445,30 @@ std::string Channel::_getUserModePrefix(const std::string &nickname) const
     if (isOp(nickname))
         return "@";
     return "";
+}
+
+bool Channel::updateUserNick(const std::string &oldNick, const std::string &newNick)
+{
+    if (this->_userlist.find(oldNick) == this->_userlist.end())
+        return false; // Usuário não estava no canal
+    
+    // Remove o nick antigo
+    this->_userlist.erase(oldNick);
+    
+    // Adiciona o novo nick
+    this->_userlist.insert(newNick);
+    
+    // Se era operador, atualiza
+    if (this->_operators.find(oldNick) != this->_operators.end())
+    {
+        this->_operators.erase(oldNick);
+        this->_operators.insert(newNick);
+    }
+    
+    // Remove das listas de banidos/convidados se presente
+    this->_banned.erase(oldNick);
+    this->_invited.erase(oldNick);
+    
+    logMessage("Nick updated in channel ", GREEN, this->_name + ": " + oldNick + " -> " + newNick, BLUE);
+    return true;
 }

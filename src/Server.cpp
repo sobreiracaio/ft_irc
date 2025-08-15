@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/13 12:43:18 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:19:18 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,30 @@ void Server::_handleClientData(int client_fd)
     }
     
     buffer[bytes_received] = '\0';
-    std::string data(buffer);
+    
+    // Limpa caracteres de controle problemáticos do buffer
+    std::string data;
+    for (int i = 0; i < bytes_received; i++)
+    {
+        unsigned char c = static_cast<unsigned char>(buffer[i]);
+        
+        // Filtrar caracteres de controle perigosos, mas manter \r\n
+        if (c >= 32 || c == '\r' || c == '\n' || c == '\t')
+        {
+            data += c;
+        }
+        else if (c == 4) // Ctrl+D (EOF)
+        {
+            // Ignora Ctrl+D mas continua processamento
+            logMessage("Ctrl+D received from FD ", YELLOW, itoa(client_fd), WHITE);
+            continue;
+        }
+        // Outros caracteres de controle são ignorados
+    }
+    
+    if (data.empty())
+        return;
+    
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
     // Se cliente não está registrado
@@ -238,7 +261,7 @@ void Server::_handleClientData(int client_fd)
     
     client->appendBuffer(data);
     
-    // CORREÇÃO: Loop para processar todas as mensagens completas no buffer
+    // Loop para processar todas as mensagens completas no buffer
     while(client->isDataComplete())
     {
         std::string message = client->getNextCompleteMessage();
@@ -506,14 +529,24 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
 std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
 {
     std::string modifiedNickname = nickname;
-    size_t pos = modifiedNickname.find('\r');
-
-    if(pos != std::string::npos)
-        modifiedNickname.erase(pos);
     
-    pos = modifiedNickname.find('\n');
-    if(pos != std::string::npos)
-        modifiedNickname.erase(pos);
+    // Remove caracteres de controle mais agressivamente
+    std::string cleanNick;
+    for (size_t i = 0; i < modifiedNickname.length(); i++)
+    {
+        unsigned char c = static_cast<unsigned char>(modifiedNickname[i]);
+        // Remove todos os caracteres de controle exceto espaços normais
+        if (c >= 32 && c != 127) // Caracteres imprimíveis
+            cleanNick += c;
+        else if (c == ' ') // Permitir espaço, mas será tratado depois
+            break; // Para no primeiro espaço
+    }
+    modifiedNickname = cleanNick;
+    
+    // Remove espaços extras
+    size_t space_pos = modifiedNickname.find(' ');
+    if (space_pos != std::string::npos)
+        modifiedNickname.erase(space_pos);
     
     if (!_isValidNickname(modifiedNickname))
     {
@@ -521,11 +554,14 @@ std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
         return modifiedNickname;
     }
     
+    // Verificação melhorada para nicks duplicados
     std::map<int, Client*>::iterator it;
     for (it = this->_clients.begin(); it != this->_clients.end(); it++)
     {
         Client *client = it->second;
-        if((client->getNickname() == modifiedNickname) && client->getFd() != client_fd)
+        // Verifica se o cliente existe, está ativo e tem o mesmo nick
+        if (client && client->getFd() != client_fd && !client->getNickname().empty() && 
+            client->getNickname() == modifiedNickname)
         {
             this->_sendErrorReply(client_fd, ERR_NICKNAMEINUSE, modifiedNickname + " :Nickname is already in use");
             modifiedNickname += "_";
@@ -549,16 +585,64 @@ void Server::changeNick(std::string const &data, int client_fd)
     if (!client)
         return;
     
-    std::string new_nickname = this->_checkDoubles(tokens[1], client_fd);
     std::string old_nick = client->getNickname();
+    std::string new_nickname = this->_checkDoubles(tokens[1], client_fd);
     
-    std::string msg = ":" + old_nick + "!" + client->getUsername() + "@" + client->getHostname() + 
-                      " NICK :" + new_nickname + "\r\n";
+    // Se o nick não mudou (incluindo casos onde foi adicionado _), ainda processa
+    if (old_nick == new_nickname && tokens[1] == new_nickname)
+        return; // Mesmo nick, sem mudança necessária
     
-    if (send(client_fd, msg.c_str(), msg.length(), 0) == -1)
-        logMessage("ERROR: ", RED, "Failed to send NICK response!", YELLOW, ERR);
+    // Prepara a mensagem NICK
+    std::string nick_msg = ":" + old_nick + "!" + client->getUsername() + "@" + 
+                          client->getHostname() + " NICK :" + new_nickname + "\r\n";
+    
+    // Coleta todos os clientes que precisam ser notificados
+    std::set<int> clients_to_notify;
+    std::set<std::string> client_channels = client->getChannels();
+    
+    // Para cada canal onde o usuário está
+    for (std::set<std::string>::const_iterator it = client_channels.begin(); 
+         it != client_channels.end(); ++it)
+    {
+        std::string channel_name = *it;
+        if (channel_name[0] == '#')
+            channel_name = channel_name.substr(1);
         
+        Channel *channel = getChannelByName(channel_name);
+        if (channel)
+        {
+            // Atualiza o nick no canal usando o novo método
+            channel->updateUserNick(old_nick, new_nickname);
+            
+            // Coleta usuários do canal para notificar
+            std::vector<std::string> users = channel->getUserList();
+            for (size_t i = 0; i < users.size(); i++)
+            {
+                Client *user = getClientByNick(users[i]);
+                if (user && user->getFd() != client_fd)
+                {
+                    clients_to_notify.insert(user->getFd());
+                }
+            }
+        }
+    }
+    
+    // Atualiza o nickname do cliente
     client->setNickname(new_nickname);
+    
+    // Envia confirmação para o próprio cliente
+    if (send(client_fd, nick_msg.c_str(), nick_msg.length(), 0) == -1)
+        logMessage("ERROR: ", RED, "Failed to send NICK response!", YELLOW, ERR);
+    
+    // Notifica todos os clientes coletados
+    for (std::set<int>::iterator it = clients_to_notify.begin(); 
+         it != clients_to_notify.end(); ++it)
+    {
+        if (send(*it, nick_msg.c_str(), nick_msg.length(), 0) == -1)
+            logMessage("ERROR: ", RED, "Failed to broadcast NICK change", YELLOW, ERR);
+    }
+    
+    logMessage("Nickname changed: ", GREEN, old_nick + " -> " + new_nickname, BLUE);
 }
 
 void Server::quitServer(std::string const &data, int client_fd)

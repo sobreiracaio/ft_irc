@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 18:06:39 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:21:38 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ Client::Client(int client_socket, sockaddr_in client_addr)
         this->_hostname = "unknown";
     
     logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
+    
 }
 
 Client::~Client()

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 19:26:38 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:18:35 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,7 @@ class Channel
         bool hasUser(std::string const &user) const;
         std::vector<std::string> getUserList() const;
         std::string getUserListString() const;
+        bool updateUserNick(const std::string &oldNick, const std::string &newNick);
 
         //Operators management
         bool addOp(std::string const &user);
