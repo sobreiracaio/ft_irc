@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:21:38 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:43:56 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,69 +174,124 @@ void Client::setNamesAndPass(std::string const &data)
             std::string cmd = line.substr(0, 5);
             
             if(cmd == "PASS ")
-                this->_parsePassCommand(line);
+                this->parsePassCommand(line);
             else if(cmd == "NICK ")
-                this->_parseNickCommand(line);
+                this->parseNickCommand(line);
             else if(cmd == "USER ")
-                this->_parseUserCommand(line);
+                this->parseUserCommand(line);
         }
     }
 }
 
-void Client::_parsePassCommand(const std::string &line)
+void Client::parsePassCommand(const std::string &line)
 {
-    if (line.length() > 5)
+   if (line.length() > 5)
     {
-        this->_password = line.substr(5);
-        // Remove spaces and control chars at the end
-        size_t end = this->_password.find_last_not_of(" \t\r\n");
-        if (end != std::string::npos)
-            this->_password = this->_password.substr(0, end + 1);
+        std::string password = line.substr(5);
         
-        this->_hasPassword = !this->_password.empty();
+        // Remove espaços no início
+        size_t start = password.find_first_not_of(" \t");
+        if (start != std::string::npos)
+            password = password.substr(start);
+        
+        // Remove caracteres de controle no final (mas mantém o conteúdo)
+        size_t end = password.find_last_not_of(" \t\r\n");
+        if (end != std::string::npos)
+            password = password.substr(0, end + 1);
+        
+        this->_password = password;
+        this->_hasPassword = !password.empty();
+        
+        logMessage("Password set for client FD=" + itoa(_client_fd) + ": ", CYAN, 
+                  (password.empty() ? "[EMPTY]" : "[HIDDEN]"), WHITE);
+        
+        this->checkRegistrationComplete();
     }
 }
 
-void Client::_parseNickCommand(const std::string &line)
-{
-    if (line.length() > 5)
-        this->setNickname(line.substr(5));
-}
-
-void Client::_parseUserCommand(const std::string &line)
+void Client::parseNickCommand(const std::string &line)
 {
     if (line.length() > 5)
     {
-        std::istringstream temp_iss(line.substr(5));
-        std::string username, mode, unused, realname_part;
+        std::string nickname = line.substr(5);
+        
+        // Remove espaços no início
+        size_t start = nickname.find_first_not_of(" \t");
+        if (start != std::string::npos)
+            nickname = nickname.substr(start);
+        
+        // Remove espaços e caracteres de controle no final
+        size_t end = nickname.find_last_not_of(" \t\r\n");
+        if (end != std::string::npos)
+            nickname = nickname.substr(0, end + 1);
+        
+        // Remove espaços no meio (pega só a primeira palavra)
+        size_t space_pos = nickname.find(' ');
+        if (space_pos != std::string::npos)
+            nickname = nickname.substr(0, space_pos);
+        
+        this->setNickname(nickname);
+        logMessage("Nickname parsed for client FD=" + itoa(_client_fd) + ": ", CYAN, nickname, WHITE);
+    }
+}
+
+void Client::parseUserCommand(const std::string &line)
+{
+   if (line.length() > 5)
+    {
+        std::string user_data = line.substr(5);
+        std::istringstream iss(user_data);
+        std::string username, mode, unused;
         
         // Format: USER <username> <mode> <unused> :<realname>
-        if (temp_iss >> username >> mode >> unused)
+        if (iss >> username >> mode >> unused)
         {
             this->setUsername(username);
             
-            //Gets the rest of the line as realname (after ":")
+            // Gets the rest of the line as realname (after ":")
             std::string remaining;
-            std::getline(temp_iss, remaining);
+            std::getline(iss, remaining);
             
             size_t colon_pos = remaining.find(':');
             if (colon_pos != std::string::npos)
             {
-                this->setRealname(remaining.substr(colon_pos + 1));
+                std::string realname = remaining.substr(colon_pos + 1);
+                
+                // Remove espaços no início e fim do realname
+                size_t start = realname.find_first_not_of(" \t");
+                if (start != std::string::npos)
+                    realname = realname.substr(start);
+                
+                size_t end = realname.find_last_not_of(" \t\r\n");
+                if (end != std::string::npos)
+                    realname = realname.substr(0, end + 1);
+                
+                this->setRealname(realname);
             }
+            
+            logMessage("User info parsed for client FD=" + itoa(_client_fd) + ": ", CYAN, 
+                      username, WHITE);
         }
     }
 }
 
 void Client::checkRegistrationComplete()
 {
-    // Client is properly registered when it has nick, user and password
     bool was_registered = this->_isRegistered;
     this->_isRegistered = (this->_hasNick && this->_hasUser && this->_hasPassword);
     
     if (!was_registered && this->_isRegistered)
     {
-        logMessage("Client registration complete! Nick: ", GREEN, this->_nickname, BLUE);
+        logMessage("Client registration data complete! Nick: ", GREEN, 
+                  this->_nickname + " User: " + this->_username + " Pass: [HIDDEN]", BLUE);
+    }
+    else if (!this->_isRegistered)
+    {
+        logMessage(std::string("Client registration incomplete - Nick: ") + 
+        (this->_hasNick ? "OK" : "MISSING") + 
+        " User: " + (this->_hasUser ? "OK" : "MISSING") + 
+        " Pass: " + (this->_hasPassword ? "OK" : "MISSING"),
+        YELLOW, "", WHITE);
     }
 }
 

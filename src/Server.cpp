@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:19:18 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:37:16 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,6 +192,7 @@ void Server::_acceptNewClient(void)
     this->_poll_fds.push_back(client_pollfd);
 }
 
+// Substitua a função _handleClientData no Server.cpp
 void Server::_handleClientData(int client_fd)
 {
     char buffer[BUFFER_SIZE];
@@ -240,28 +241,66 @@ void Server::_handleClientData(int client_fd)
     
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
-    // Se cliente não está registrado
-    if(client->getNickname().empty())
+    // CORREÇÃO: Sempre adicionar dados ao buffer primeiro
+    client->appendBuffer(data);
+    
+    // Se cliente não está registrado, processa registro
+    if(!client->isRegistered())
     {
-        client->setNamesAndPass(data);
-        
-        // Verifica se a senha está correta
-        if(!this->_checkPassword(client->getPassword()))
+        // Processa todos os comandos de registro disponíveis no buffer
+        while(client->isDataComplete())
         {
-            this->_sendErrorReply(client_fd, ERR_PASSWDMISMATCH, "Password incorrect!");
-            this->_removeClient(client_fd);
-            return;
+            std::string message = client->getNextCompleteMessage();
+            
+            if (message.empty())
+                break;
+            
+            logMessage("Processing registration command: ", CYAN, message, WHITE);
+            
+            // Processa comandos de registro
+            if (message.length() >= 5)
+            {
+                std::string cmd = message.substr(0, 5);
+                
+                if(cmd == "PASS ")
+                {
+                    client->parsePassCommand(message);
+                }
+                else if(cmd == "NICK ")
+                {
+                    client->parseNickCommand(message);
+                }
+                else if(cmd == "USER ")
+                {
+                    client->parseUserCommand(message);
+                }
+            }
         }
         
-        std::string nick = this->_checkDoubles(client->getNickname(), client_fd);
-        client->setNickname(nick);
-        this->_welcomeMessage(client);
+        // Só verifica se está totalmente registrado após processar todos os comandos
+        if (client->isRegistered())
+        {
+            // Verifica se a senha está correta APENAS quando totalmente registrado
+            if(!this->_checkPassword(client->getPassword()))
+            {
+                logMessage("Password check failed for client: ", RED, client->getNickname(), YELLOW);
+                this->_sendErrorReply(client_fd, ERR_PASSWDMISMATCH, "Password incorrect!");
+                // Aguarda um pouco antes de desconectar para evitar "connection reset"
+                usleep(100000); // 100ms
+                this->_removeClient(client_fd);
+                return;
+            }
+            
+            // Verifica duplicatas de nickname
+            std::string nick = this->_checkDoubles(client->getNickname(), client_fd);
+            client->setNickname(nick);
+            this->_welcomeMessage(client);
+            logMessage("Client fully registered: ", GREEN, client->getNickname(), BLUE);
+        }
         return;
     }
     
-    client->appendBuffer(data);
-    
-    // Loop para processar todas as mensagens completas no buffer
+    // Cliente já registrado - processa comandos normais
     while(client->isDataComplete())
     {
         std::string message = client->getNextCompleteMessage();

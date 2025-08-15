@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/12 14:42:10 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 13:37:57 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,7 @@ class Client
         bool _hasUser;
 
         // Private parsing methods
-        void _parsePassCommand(const std::string &line);
-        void _parseNickCommand(const std::string &line);
-        void _parseUserCommand(const std::string &line);
+        
 
     public:
         Client(int client_socket, sockaddr_in client_addr);
@@ -89,4 +87,9 @@ class Client
         
         // Validation
         bool isValidInput(const std::string &input) const;
+
+        //Parsing
+        void parsePassCommand(const std::string &line);
+        void parseNickCommand(const std::string &line);
+        void parseUserCommand(const std::string &line);
 };
