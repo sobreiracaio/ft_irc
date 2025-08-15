@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:37:16 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 14:13:35 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,12 +241,14 @@ void Server::_handleClientData(int client_fd)
     
     logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
-    // CORREÇÃO: Sempre adicionar dados ao buffer primeiro
+    // SEMPRE adicionar dados ao buffer primeiro
     client->appendBuffer(data);
     
     // Se cliente não está registrado, processa registro
     if(!client->isRegistered())
     {
+        bool processed_any_command = false;
+        
         // Processa todos os comandos de registro disponíveis no buffer
         while(client->isDataComplete())
         {
@@ -256,6 +258,7 @@ void Server::_handleClientData(int client_fd)
                 break;
             
             logMessage("Processing registration command: ", CYAN, message, WHITE);
+            processed_any_command = true;
             
             // Processa comandos de registro
             if (message.length() >= 5)
@@ -275,6 +278,34 @@ void Server::_handleClientData(int client_fd)
                     client->parseUserCommand(message);
                 }
             }
+            // CORREÇÃO: Para nc, também aceita comandos sem espaço extra
+            else if (message.length() >= 4)
+            {
+                std::string cmd = message.substr(0, 4);
+                if(cmd == "NICK")
+                {
+                    // Processa NICK mesmo sem espaço (para nc)
+                    if(message.length() > 4)
+                        client->parseNickCommand("NICK " + message.substr(4));
+                }
+                else if(cmd == "PASS")
+                {
+                    if(message.length() > 4)
+                        client->parsePassCommand("PASS " + message.substr(4));
+                }
+                else if(cmd == "USER")
+                {
+                    if(message.length() > 4)
+                        client->parseUserCommand("USER " + message.substr(4));
+                }
+            }
+        }
+        
+        // NOVO: Se processamos comandos e temos PASS + NICK, tenta completar registro
+        if(processed_any_command && !client->getPassword().empty() && !client->getNickname().empty())
+        {
+            // Força verificação de registro (que auto-gerará USER se necessário)
+            client->checkRegistrationComplete();
         }
         
         // Só verifica se está totalmente registrado após processar todos os comandos

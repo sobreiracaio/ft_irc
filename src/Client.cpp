@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:43:56 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 14:11:15 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,6 +278,18 @@ void Client::parseUserCommand(const std::string &line)
 void Client::checkRegistrationComplete()
 {
     bool was_registered = this->_isRegistered;
+    
+    // CORREÇÃO: Se temos PASS e NICK, mas não USER, cria USER padrão
+    if (this->_hasPassword && this->_hasNick && !this->_hasUser)
+    {
+        // Auto-gera dados de usuário baseados no nickname
+        this->_username = this->_nickname;
+        this->_realname = this->_nickname;
+        this->_hasUser = true;
+        logMessage("Auto-generated USER data for: ", CYAN, this->_nickname, WHITE);
+    }
+    
+    // Cliente está registrado quando tem nick, user e password
     this->_isRegistered = (this->_hasNick && this->_hasUser && this->_hasPassword);
     
     if (!was_registered && this->_isRegistered)
@@ -287,11 +299,10 @@ void Client::checkRegistrationComplete()
     }
     else if (!this->_isRegistered)
     {
-        logMessage(std::string("Client registration incomplete - Nick: ") + 
-        (this->_hasNick ? "OK" : "MISSING") + 
-        " User: " + (this->_hasUser ? "OK" : "MISSING") + 
-        " Pass: " + (this->_hasPassword ? "OK" : "MISSING"),
-        YELLOW, "", WHITE);
+        logMessage("Client registration incomplete - Nick: " + 
+                  std::string(this->_hasNick ? "OK" : "MISSING") + 
+                  " User: " + (this->_hasUser ? "OK" : "MISSING") + 
+                  " Pass: " + (this->_hasPassword ? "OK" : "MISSING"), YELLOW, "", WHITE);
     }
 }
 
