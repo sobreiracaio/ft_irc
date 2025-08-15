@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 14:13:35 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 15:43:37 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1051,14 +1051,12 @@ void Server::joinChannel(std::string const &data, int client_fd)
         return;
     
     Channel *channel = this->getChannelByName(channelName);
-    bool is_new_channel = false;
-    
+        
     if (!channel)
     {
         // Create new channel
         channel = new Channel(channelName, channelPassword);
         this->_channels[channelName] = channel;
-        is_new_channel = true;
     }
     
     // Verify if client can join channel
@@ -1241,7 +1239,7 @@ void Server::topicCommand(std::string const &data, int client_fd)
     }
     
     std::string newTopic = data.substr(colon_pos + 1);
-    channel->setTopic(newTopic, client->getNickname());
+    channel->setTopic(newTopic);
     
     // Broadcast topic change to channel
     std::string topic_change = ":" + client->getNickname() + "!" + client->getUsername() + "@" + 
@@ -1462,18 +1460,39 @@ void Server::handleChannelMode(std::string const &data, int client_fd)
 
 void Server::_welcomeMessage(Client* client)
 {
-    
+    std::string user = "" + client->getNickname() + "";
     std::stringstream welcome;
-    welcome << "##############################\n";
-    welcome << "#   Bem-vindo ao IRC Server  #\n";
-    welcome << "#                            #\n";
-    welcome << "#  Comandos disponíveis:     #\n";
-    welcome << "#                            #\n";
-    welcome << "#  /JOIN #canal [senha]      #\n";
-    welcome << "#  /PRIVMSG alvo :mensagem   #\n";
-    welcome << "#  /NICK novonick            #\n";
-    welcome << "#  /QUIT                     #\n";
-    welcome << "##############################\n";
+
+    // Largura total da moldura sem os dois '#'
+    const int totalWidth = 70;
+
+    // Calcula espaços para centralizar o usuário
+    int padding = totalWidth - static_cast<int>(user.size());
+    if (padding < 0) padding = 0;
+    int padLeft = padding / 2;
+    int padRight = padding - padLeft;
+
+    welcome << "########################################################################\n";
+    welcome << "#                         Bem-vindo ao IRC Server                      #\n";
+    welcome << "#" << std::string(padLeft, ' ') << user << std::string(padRight, ' ') << "#\n";
+    welcome << "#  Comandos disponíveis:                                               #\n";
+    welcome << "#                                                                      #\n";
+    welcome << "#  /JOIN   #canal [senha]       -> Entrar em um canal                  #\n";
+    welcome << "#  /PRIVMSG alvo :mensagem      -> Enviar mensagem privada             #\n";
+    welcome << "#  /NICK   novonick             -> Alterar seu apelido                 #\n";
+    welcome << "#  /QUIT                        -> Sair do servidor                    #\n";
+    welcome << "#                                                                      #\n";
+    welcome << "#  Comandos de canal:                                                  #\n";
+    welcome << "#  /KICK   #canal nick [motivo] -> Expulsar usuário                    #\n";
+    welcome << "#  /INVITE nick #canal          -> Convidar usuário                    #\n";
+    welcome << "#  /TOPIC  #canal [tópico]      -> Definir/ver tópico                  #\n";
+    welcome << "#  /MODE   #canal +i/-i         -> Modo convidado obrigatório/livre    #\n";
+    welcome << "#  /MODE   #canal +t/-t         -> Apenas operadores mudam tópico      #\n";
+    welcome << "#  /MODE   #canal +k/-k senha   -> Definir/remover senha               #\n";
+    welcome << "#  /MODE   #canal +o/-o nick    -> Dar/remover operador                #\n";
+    welcome << "#  /MODE   #canal +l/-l [n]     -> Definir/remover limite              #\n";
+    welcome << "########################################################################\n";  
+
     
     std::string line;
 

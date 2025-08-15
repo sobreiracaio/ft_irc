@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:18:35 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 15:41:24 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ class Channel
         time_t getCreationTime() const;
 
         //Setters
-        void setTopic(std::string const &topic, std::string const &setter = "");
+        void setTopic(std::string const &topic);
         void setPassword(std::string const &password);
         void setUserLimit(size_t limit);
         void setWelcomeMsg(std::string const &msg);

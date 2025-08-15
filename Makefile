@@ -6,7 +6,7 @@
 #    By: caio <caio@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/03 13:35:25 by caio              #+#    #+#              #
-#    Updated: 2025/08/06 13:44:45 by caio             ###   ########.fr        #
+#    Updated: 2025/08/15 15:43:50 by caio             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,9 +14,9 @@ NAME			=	ircserv
 
 COMPILE			= 	c++
 
-FLAGS 			=	#-Wall -Wextra -Werror -std=c++98
+FLAGS 			=	-Wall -Wextra -Werror -std=c++98
 
-EXTRA_FLAGS		=	#-pedantic-errors -g
+EXTRA_FLAGS		=	-pedantic-errors -g
 
 INCLUDE			=	-Iinclude
 

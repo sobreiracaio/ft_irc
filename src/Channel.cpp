@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:17:55 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 15:41:05 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ time_t Channel::getCreationTime() const
 }
 
 // Setters
-void Channel::setTopic(std::string const &topic, std::string const &setter)
+void Channel::setTopic(std::string const &topic)
 {
     this->_topic = topic;
     logMessage("Topic set for channel ", BLUE,this->_name + ": " + topic, GREEN);

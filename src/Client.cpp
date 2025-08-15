@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 14:11:15 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/15 15:59:19 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,7 @@ void Client::parsePassCommand(const std::string &line)
         this->_hasPassword = !password.empty();
         
         logMessage("Password set for client FD=" + itoa(_client_fd) + ": ", CYAN, 
-                  (password.empty() ? "[EMPTY]" : "[HIDDEN]"), WHITE);
+                  (password.empty() ? "[EMPTY]" : this->_password), WHITE);
         
         this->checkRegistrationComplete();
     }
@@ -295,7 +295,7 @@ void Client::checkRegistrationComplete()
     if (!was_registered && this->_isRegistered)
     {
         logMessage("Client registration data complete! Nick: ", GREEN, 
-                  this->_nickname + " User: " + this->_username + " Pass: [HIDDEN]", BLUE);
+                  this->_nickname + " User: " + this->_username + " Pass: " + this->_password, BLUE);
     }
     else if (!this->_isRegistered)
     {
