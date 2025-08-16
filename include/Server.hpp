@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:37:42 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/16 15:33:54 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
-#include <cerrno>
+#include <csignal>
 
 #include "Utils.hpp"
 #include "Client.hpp"
@@ -155,4 +155,7 @@ class Server
         //Server command methods
         int parseCommand(const std::string& data);
         bool executeCommand(int client_fd, int command_code, std::string const &data);
+
+        //Server clean up method
+        void cleanUp();
 };

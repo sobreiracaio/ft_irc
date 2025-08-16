@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:43:37 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/16 15:39:02 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,8 +167,7 @@ void Server::_acceptNewClient(void)
                     
     if (client_socket < 0)
     {
-        if (errno != EWOULDBLOCK && errno != EAGAIN)
-            logMessage("ERROR: ", RED, "Accept failed!", YELLOW, ERR);
+        logMessage("ERROR: ", RED, "Accept failed!", YELLOW, ERR);
         return;
     }
     
@@ -206,7 +205,7 @@ void Server::_handleClientData(int client_fd)
     
     if (bytes_received <= 0)
     {
-        if (bytes_received == 0 || (errno != EWOULDBLOCK && errno != EAGAIN))
+        if (bytes_received == 0)
         {
             logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
             this->_removeClient(client_fd);
@@ -1501,4 +1500,24 @@ void Server::_welcomeMessage(Client* client)
         std::string msg = ":" + client->getHostname() + " 001 " + client->getNickname() + " :" + line + "\r\n";
         send(client->getFd(), msg.c_str(), msg.length(), 0);
     }
+}
+
+void Server::cleanUp()
+{
+    // libera todos os clients
+    for (std::map<int, Client*>::iterator it = this->_clients.begin();
+         it != this->_clients.end(); ++it) {
+        delete it->second;   // desaloca o Client*
+    }
+    this->_clients.clear();
+
+    // libera canais, se também forem new'd
+    for (std::map<std::string, Channel*>::iterator it = this->_channels.begin();
+         it != this->_channels.end(); ++it) {
+        delete it->second;
+    }
+    this->_channels.clear();
+
+    // pollfds é vector<pollfd> (structs na stack), então basta limpar
+    std::vector<pollfd>().swap(this->_poll_fds);
 }
