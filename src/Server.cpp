@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: lsampiet <lsampiet@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/16 15:39:02 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/16 18:27:20 by lsampiet         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@ void Server::run()
             }
             else if(this->_poll_fds[i].revents & (POLLHUP | POLLERR))
             {
-                //Client disconnected by socker error
+                //Client disconnected by socket error
                 if(this->_poll_fds[i].fd != this->_server_fd)
                 {
                     this->_removeClient(this->_poll_fds[i].fd);

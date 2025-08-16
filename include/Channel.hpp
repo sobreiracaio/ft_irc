@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: lsampiet <lsampiet@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:41:24 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/16 18:34:04 by lsampiet         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,11 +120,5 @@ class Channel
 
         //Empty channel checking
         bool isEmpty() const;
-        
-        
 
-        
-        
-    
-    
 };

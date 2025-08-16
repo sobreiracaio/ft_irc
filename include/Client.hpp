@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: lsampiet <lsampiet@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:37:57 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/16 18:39:34 by lsampiet         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ class Client
         std::string getHostname() const;
         std::string getPassword() const;
         std::string getBuffer() const;
+        sockaddr_in getClientAddr() const;
         bool isOperator() const;
         bool isRegistered() const;
         
