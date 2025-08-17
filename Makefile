@@ -6,9 +6,15 @@
 #    By: lsampiet <lsampiet@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/03 13:35:25 by caio              #+#    #+#              #
-#    Updated: 2025/08/16 18:38:21 by lsampiet         ###   ########.fr        #
+#    Updated: 2025/08/16 21:35:00 by lsampiet         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+#COLORS
+GREEN	:= \033[0;32m
+MAG		:= \033[0;35m
+CYAN	:= \033[0;36m
+RST		:= \033[0m
 
 NAME			=	ircserv
 
@@ -20,19 +26,40 @@ EXTRA_FLAGS		=	-pedantic-errors -g
 
 INCLUDE			=	-Iinclude
 
-SRCS				=	src/main.cpp src/Client.cpp src/Server.cpp src/Utils.cpp src/Channel.cpp
+SRC_DIR			=	src
+INC_DIR			=	includes
+BIN_DIR			=	bin
+SRCS			=	$(SRC_DIR)/main.cpp \
+					$(SRC_DIR)/Client.cpp \
+					$(SRC_DIR)/Server.cpp \
+					$(SRC_DIR)/Utils.cpp \
+					$(SRC_DIR)/Channel.cpp
 
-OBJS			=	$(SRCS:.cpp=.o)
 
-all: $(NAME)
+OBJS	:= $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%.o,$(SRCS))
+
+all: $(BIN_DIR) $(NAME)
+
+$(BIN_DIR):
+	@mkdir -p $(BIN_DIR)
 
 $(NAME): $(OBJS)
-	$(COMPILE) $(FLAGS) $(EXTRA_FLAGS) $(SRCS) -o $(NAME)
+	@echo "Linking $(NAME)..."
+	@$(COMPILE) $(FLAGS) $(EXTRA_FLAGS) -o $@ $^
+	@echo "\n$(CYAN)----- $(MAG)❤ $(GREEN)$(NAME) compiled! $(MAG)❤ $(CYAN)-----$(RST)\n"
+
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BIN_DIR)
+	@echo "Compiling $<..."
+	@$(COMPILE) $(FLAGS) $(EXTRA_FLAGS) -I $(INC_DIR) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	@echo "Cleaning objects..."
+	@rm -rf $(BIN_DIR)
 
 fclean: clean
-	rm -f $(NAME)
+	@echo "Cleaning executable..."
+	@rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re
