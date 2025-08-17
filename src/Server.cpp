@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 17:41:27 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 18:13:27 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,6 @@ void Server::run()
             break;
         }
 
-       
         size_t poll_size = this->_poll_fds.size();
         for (size_t i = 0; i < poll_size; i++)
         {
@@ -209,9 +208,6 @@ void Server::_handleClientData(int client_fd)
     if (!client)
         return;
     
-    std::string pingMsg = "PING :OK \r\n";
-    send(client_fd, pingMsg.c_str(), pingMsg.length(), 0);
-        
     memset(buffer, 0, BUFFER_SIZE);
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
     
@@ -341,7 +337,8 @@ void Server::_handleClientData(int client_fd)
         }
         return;
     }
-    
+
+        
     // Cliente já registrado - processa comandos normais
     while(client->isDataComplete())
     {
