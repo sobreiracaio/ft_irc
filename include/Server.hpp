@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/16 15:33:54 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 17:26:28 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <csignal>
+#include <cerrno>
 
 #include "Utils.hpp"
 #include "Client.hpp"
@@ -52,6 +53,7 @@
 #define INVITE 108
 #define TOPIC 109
 #define MODE 110
+#define PONG 111
 #define NO_COMM -1
 
 
@@ -109,6 +111,7 @@ class Server
         void _acceptNewClient(void);
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
+        bool _checkGhostClient(std::string data, int client_fd);
         
         //Message handling
         void _sendNumericReply(int client_fd, int code, const std::string &message);

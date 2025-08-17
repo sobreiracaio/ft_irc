@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/16 15:39:02 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 17:41:27 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,20 +114,21 @@ void Server::run()
 {
     while(true)
     {
-        int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), -1);
+        int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), 5000);
 
         if (poll_count == -1)
         {
             logMessage("ERROR: ", RED, "Poll failed!", YELLOW, ERR);
             break;
         }
-        
+
+       
         size_t poll_size = this->_poll_fds.size();
         for (size_t i = 0; i < poll_size; i++)
         {
             if (i >= this->_poll_fds.size())
                 break;
-                
+            
             if(this->_poll_fds[i].revents & POLLIN)
             {
                 if(this->_poll_fds[i].fd == this->_server_fd) //NEW CONNECTION
@@ -140,6 +141,8 @@ void Server::run()
                     //HANDLING CLIENT DATA
                     this->_handleClientData(this->_poll_fds[i].fd);
                     
+                        
+                   
                     if(i >= this->_poll_fds.size())
                         break;
    
@@ -157,6 +160,12 @@ void Server::run()
             }
         }
     }
+}
+
+bool Server::_checkGhostClient(std::string data, int client_fd)
+{    
+    logMessage(data + "FD = ", RED, itoa(client_fd), YELLOW);
+    return (true);
 }
 
 void Server::_acceptNewClient(void)
@@ -191,7 +200,7 @@ void Server::_acceptNewClient(void)
     this->_poll_fds.push_back(client_pollfd);
 }
 
-// Substitua a função _handleClientData no Server.cpp
+
 void Server::_handleClientData(int client_fd)
 {
     char buffer[BUFFER_SIZE];
@@ -200,6 +209,9 @@ void Server::_handleClientData(int client_fd)
     if (!client)
         return;
     
+    std::string pingMsg = "PING :OK \r\n";
+    send(client_fd, pingMsg.c_str(), pingMsg.length(), 0);
+        
     memset(buffer, 0, BUFFER_SIZE);
     int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
     
@@ -545,6 +557,8 @@ int Server::parseCommand(const std::string& data)
         return TOPIC;
     if(command == "MODE")
         return MODE;
+    if(command == "PONG")
+        return PONG;
         
     return NO_COMM;
 }
@@ -588,6 +602,12 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
     case MODE:
         this->modeCommand(data, client_fd);
         return true;
+    
+    case PONG:
+        if (this->_checkGhostClient(data, client_fd))
+            return false;
+        else
+            return true;
         
     default:
         //this->_sendErrorReply(client_fd, ERR_UNKNOWNCOMMAND, "Unknown command");

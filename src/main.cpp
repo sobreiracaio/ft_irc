@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/16 15:43:15 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 15:11:05 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     }
 
     signal(SIGINT, signalHandler);
-    signal(SIGTSTP, SIG_IGN);
+    signal(SIGTSTP, signalHandler);
     signal(SIGTERM, signalHandler);
     signal(SIGPIPE, SIG_IGN);
        
