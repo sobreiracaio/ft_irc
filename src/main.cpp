@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 14:30:03 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:09:23 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,8 @@ int main(int argc, char **argv)
     
     if(!checkPort(port))
         return (-1);
+
+    int_port = atoi(port.c_str());
     
     signal(SIGINT, signalHandler);
     signal(SIGTSTP, signalHandler);
