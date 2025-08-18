@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 13:37:57 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 22:18:01 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <ctime>
 
 #include "Utils.hpp"
 
@@ -38,7 +39,7 @@ class Client
         std::string _password;
         std::string _buffer;
         std::set<std::string> _channels; //Channels in which the client is participating
-        
+        time_t _lastActivity;
         bool _isOp;
         bool _isRegistered;
         bool _hasPassword;
@@ -92,4 +93,8 @@ class Client
         void parsePassCommand(const std::string &line);
         void parseNickCommand(const std::string &line);
         void parseUserCommand(const std::string &line);
+
+        //Activity check
+        void setLastActivity (time_t now);
+        time_t getLastActivity (void);
 };

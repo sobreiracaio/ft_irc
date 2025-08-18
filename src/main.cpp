@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/29 18:07:26 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 15:11:05 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 14:30:03 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,25 @@ void signalHandler(int signal_type)
 }
 
 
+bool checkPort(std::string &port)
+{
+    if(!isNum(port))
+    {
+        logMessage("ERROR: ", RED, "Port must be a numerical value!", YELLOW, ERR);
+        return (false);
+    }
+    
+    int int_port = atoi(port.c_str());
+    
+    if(!isValidPort(int_port))
+    {
+        logMessage("ERROR: ", RED, "Invalid port number!", YELLOW, ERR);
+        return (false);
+    }
+    return (true);
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -68,16 +87,9 @@ int main(int argc, char **argv)
     
     int int_port = 0;
     
-    if(isNum(port))
-    {
-        int_port = atoi(port.c_str());
-    }
-    else
-    {
-        logMessage("ERROR: ", RED, "Invalid port number!", YELLOW, ERR);
+    if(!checkPort(port))
         return (-1);
-    }
-
+    
     signal(SIGINT, signalHandler);
     signal(SIGTSTP, signalHandler);
     signal(SIGTERM, signalHandler);

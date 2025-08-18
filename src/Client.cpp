@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:59:19 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/17 22:19:08 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ Client::Client(int client_socket, sockaddr_in client_addr)
         this->_hostname = "unknown";
     
     logMessage("New client connected! FD= ", BLUE, itoa(client_socket), GREEN);
+    this->_lastActivity = time(NULL);
     
 }
 
@@ -343,4 +344,13 @@ bool Client::isValidInput(const std::string &input) const
             return false;
     }
     return true;
+}
+
+void Client::setLastActivity (time_t now)
+{
+    this->_lastActivity = now;
+}
+time_t Client::getLastActivity (void)
+{
+    return (this->_lastActivity);
 }

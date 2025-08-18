@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 17:26:28 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 14:50:20 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,6 @@
 #include "Utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
-
-#define BUFFER_SIZE 4096
-#define MAX_NICK_LENGTH 30      
-#define MAX_CHANNEL_NAME 50
-
 
 // IRC COMMAND CODES - ARBITRARY
 #define JOIN 100
@@ -111,8 +106,7 @@ class Server
         void _acceptNewClient(void);
         void _handleClientData(int client_fd);
         void _removeClient(int client_fd);
-        bool _checkGhostClient(std::string data, int client_fd);
-        
+                
         //Message handling
         void _sendNumericReply(int client_fd, int code, const std::string &message);
         void _sendErrorReply(int client_fd, int code, const std::string &message);
@@ -144,7 +138,7 @@ class Server
         void privateMsg(std::string const &data, int client_fd);
         void joinChannel(std::string const &data, int client_fd);
         void partChannel(std::string const &data, int client_fd);
-        void quitServer(std::string const &data, int client_fd);
+        void quitServer(std::string const &data, int client_fd, std::string msg = "Client quit");
         void kickUser(std::string const &data, int client_fd);
         void inviteUser(std::string const &data, int client_fd);
         

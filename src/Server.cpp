@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 18:13:27 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 14:04:47 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,17 +114,34 @@ void Server::run()
 {
     while(true)
     {
+        time_t now = time(NULL); //time in seconds
+        
         int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), 5000);
-
+        
         if (poll_count == -1)
         {
             logMessage("ERROR: ", RED, "Poll failed!", YELLOW, ERR);
             break;
         }
 
+        if(poll_count == 0 && this->_poll_fds.size() > 1)
+        {
+           
+            for(size_t i = 1; i < this->_poll_fds.size(); i++)
+            {
+                Client *client = this->getClient(this->_poll_fds[i].fd);
+                std::string ping = "PING : ok\r\n";
+                send(client->getFd(), ping.c_str(), ping.length(),0);
+                
+                if(now - client->getLastActivity() > 20)
+                    this->quitServer("QUIT", client->getFd(), "Idle");
+            }    
+        }
+
         size_t poll_size = this->_poll_fds.size();
         for (size_t i = 0; i < poll_size; i++)
         {
+           
             if (i >= this->_poll_fds.size())
                 break;
             
@@ -139,9 +156,6 @@ void Server::run()
                 {
                     //HANDLING CLIENT DATA
                     this->_handleClientData(this->_poll_fds[i].fd);
-                    
-                        
-                   
                     if(i >= this->_poll_fds.size())
                         break;
    
@@ -157,15 +171,12 @@ void Server::run()
                     i--; // Adjust index to avoid jumping over elements
                 }
             }
+            
         }
     }
 }
 
-bool Server::_checkGhostClient(std::string data, int client_fd)
-{    
-    logMessage(data + "FD = ", RED, itoa(client_fd), YELLOW);
-    return (true);
-}
+
 
 void Server::_acceptNewClient(void)
 {
@@ -214,13 +225,10 @@ void Server::_handleClientData(int client_fd)
     if (bytes_received <= 0)
     {
         if (bytes_received == 0)
-        {
-            logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
             this->_removeClient(client_fd);
-        }
         return;        
     }
-    
+       
     buffer[bytes_received] = '\0';
     
     // Limpa caracteres de controle problemáticos do buffer
@@ -240,13 +248,14 @@ void Server::_handleClientData(int client_fd)
             logMessage("Ctrl+D received from FD ", YELLOW, itoa(client_fd), WHITE);
             continue;
         }
-        // Outros caracteres de controle são ignorados
+        
     }
     
     if (data.empty())
         return;
     
-    logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
+    if(data.find("PONG", 0, 4) == std::string::npos)
+        logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
     
     // SEMPRE adicionar dados ao buffer primeiro
     client->appendBuffer(data);
@@ -418,7 +427,7 @@ void Server::_removeClient(int client_fd)
     }
 
     close(client_fd);
-    logMessage("Client removed! FD = ", RED, itoa(client_fd), YELLOW);
+    logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
 }
 
 
@@ -556,60 +565,39 @@ int Server::parseCommand(const std::string& data)
         return MODE;
     if(command == "PONG")
         return PONG;
+    
         
     return NO_COMM;
 }
 
 bool Server::executeCommand(int client_fd, int command_code, std::string const &data)
 {
+    Client *client = this->getClient(client_fd);
+
+    // QUIT é o único que não precisa atualizar atividade
+    if (command_code != QUIT && client)
+        client->setLastActivity(time(NULL));
+
     switch (command_code)
     {
-    case JOIN:
-        this->joinChannel(data, client_fd);
-        return true; 
-        
-    case PRIVMSG:
-        this->privateMsg(data, client_fd);
-        return true;
-        
-    case NICK:
-        this->changeNick(data, client_fd);
-        return true;
-        
-    case QUIT:
-        this->quitServer(data, client_fd);
-        return false; //client removed
-        
-    case PART:
-        this->partChannel(data, client_fd);
-        return true;
-        
-    case KICK:
-        this->kickUser(data, client_fd);
-        return true;
-        
-    case INVITE:
-        this->inviteUser(data, client_fd);
-        return true;
-        
-    case TOPIC:
-        this->topicCommand(data, client_fd);
-        return true;
-        
-    case MODE:
-        this->modeCommand(data, client_fd);
-        return true;
-    
-    case PONG:
-        if (this->_checkGhostClient(data, client_fd))
-            return false;
-        else
-            return true;
-        
-    default:
-        //this->_sendErrorReply(client_fd, ERR_UNKNOWNCOMMAND, "Unknown command");
-        return true;
+        case JOIN:    this->joinChannel(data, client_fd); break;
+        case PRIVMSG: this->privateMsg(data, client_fd); break;
+        case NICK:    this->changeNick(data, client_fd); break;
+        case PART:    this->partChannel(data, client_fd); break;
+        case KICK:    this->kickUser(data, client_fd); break;
+        case INVITE:  this->inviteUser(data, client_fd); break;
+        case TOPIC:   this->topicCommand(data, client_fd); break;
+        case MODE:    this->modeCommand(data, client_fd); break;
+        case PONG:    break;
+
+        case QUIT:
+            this->quitServer(data, client_fd);
+            return false; // cliente removido
+
+        default:
+            break;
     }
+    return true;
 }
 
 std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
@@ -731,16 +719,15 @@ void Server::changeNick(std::string const &data, int client_fd)
     logMessage("Nickname changed: ", GREEN, old_nick + " -> " + new_nickname, BLUE);
 }
 
-void Server::quitServer(std::string const &data, int client_fd)
+void Server::quitServer(std::string const &data, int client_fd, std::string msg)
 {
     Client *client = getClient(client_fd);
     if (!client)
         return;
     
-    std::string quit_msg = "Client quit";
     size_t colon_pos = data.find(':');
     if (colon_pos != std::string::npos)
-        quit_msg = data.substr(colon_pos + 1);
+        msg = data.substr(colon_pos + 1);
     
     // Gets channel list before removing client
     std::set<std::string> client_channels = client->getChannels();
@@ -763,7 +750,7 @@ void Server::quitServer(std::string const &data, int client_fd)
             channel->removeUser(client_nick);
             
             // Anuncia QUIT para outros usuários do canal
-            channel->announceQuit(this, client, quit_msg);
+            channel->announceQuit(this, client, msg);
             
             // Remove channel if it is empty
             if (channel->isEmpty())
