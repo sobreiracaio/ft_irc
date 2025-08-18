@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 16:05:16 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 17:24:37 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,10 +130,8 @@ void Server::run()
             for(size_t i = 1; i < this->_poll_fds.size(); i++)
             {
                 Client *client = this->getClient(this->_poll_fds[i].fd);
-                std::string ping = "PING : ok\r\n";
-                send(client->getFd(), ping.c_str(), ping.length(),0);
                 
-                if(now - client->getLastActivity() > 20)
+                if(now - client->getLastActivity() > 300) // 5 minutes idle is automatically disconected
                     this->quitServer("QUIT", client->getFd(), "Idle");
             }    
         }
@@ -483,21 +481,6 @@ std::vector<std::string> Server::_splitMessage(const std::string &message)
         result.push_back(token);
         
     return result;
-}
-
-void Server::_sendNumericReply(int client_fd, int code, const std::string &message)
-{
-    Client *client = getClient(client_fd);
-    if (!client)
-        return;
-        
-    std::ostringstream oss;
-    oss << ":" << _server_name << " " << std::setfill('0') << std::setw(3) << code 
-        << " " << client->getNickname() << " " << message << "\r\n";
-    
-    std::string reply = oss.str();
-    if (send(client_fd, reply.c_str(), reply.length(), 0) == -1)
-        logMessage("ERROR: ", RED, "Failed to send numeric reply!", YELLOW, ERR);
 }
 
 void Server::_sendErrorReply(int client_fd, int code, const std::string &message)
@@ -1066,9 +1049,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
     if (!channel->canUserJoin(client->getNickname(), channelPassword))
     {
         // Send error based on reason of not joining
-        if (channel->isBanned(client->getNickname()))
-            this->_sendErrorReply(client_fd, ERR_BANNEDFROMCHAN, "#" + channelName + " :Cannot join channel (+b)");
-        else if (channel->hasMode(MODE_INVITE_ONLY) && !channel->isInvited(client->getNickname()))
+        if (channel->hasMode(MODE_INVITE_ONLY) && !channel->isInvited(client->getNickname()))
             this->_sendErrorReply(client_fd, ERR_INVITEONLYCHAN, "#" + channelName + " :Cannot join channel (+i)");
         else if (channel->hasMode(MODE_LIMIT) && channel->getUserLimit() > 0 && channel->getUserCount() >= channel->getUserLimit())
             this->_sendErrorReply(client_fd, ERR_CHANNELISFULL, "#" + channelName + " :Cannot join channel (+l)");

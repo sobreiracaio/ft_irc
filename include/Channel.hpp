@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:41:24 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:26:30 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,6 @@ class Channel
         //Getters
         std::string getName() const;
         std::string getTopic() const;
-        std::string getWelcomeMsg() const;
         std::string getPassword() const;
         std::string getKey() const;
         size_t getUserCount() const;
@@ -71,10 +70,9 @@ class Channel
 
         //Setters
         void setTopic(std::string const &topic);
-        void setPassword(std::string const &password);
-        void setUserLimit(size_t limit);
-        void setWelcomeMsg(std::string const &msg);
-
+        
+        
+        
         //User management
         bool addUser(std::string const &user, std::string const &password = "");
         bool removeUser(std::string const &user);
@@ -88,11 +86,6 @@ class Channel
         bool removeOp(std::string const &user);
         bool isOp(std::string const &user) const;
         
-        //Ban system
-        bool banUser(std::string const &user);
-        bool unbanUser(std::string const &user);
-        bool isBanned(std::string const &user) const;
-
         //Invite system
         bool inviteUser(std::string const &user);
         bool isInvited (std::string const &user) const;

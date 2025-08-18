@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 16:05:08 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:12:38 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ class Server
         void _removeClient(int client_fd);
                 
         //Message handling
-        void _sendNumericReply(int client_fd, int code, const std::string &message);
+        
         void _sendErrorReply(int client_fd, int code, const std::string &message);
         void _welcomeMessage(Client *client);
         std::string _checkDoubles (std::string const &nickname, int client_fd);

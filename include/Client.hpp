@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/03 15:38:13 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 22:18:01 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:20:25 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ class Client
         std::string _buffer;
         std::set<std::string> _channels; //Channels in which the client is participating
         time_t _lastActivity;
-        bool _isOp;
         bool _isRegistered;
         bool _hasPassword;
         bool _hasNick;
@@ -61,14 +60,13 @@ class Client
         std::string getHostname() const;
         std::string getPassword() const;
         std::string getBuffer() const;
-        bool isOperator() const;
         bool isRegistered() const;
         
         //Setters
         void setNickname(const std::string &nickname);
         void setUsername(const std::string &username);
         void setRealname(const std::string &realname);
-        void setOperator(bool state);
+        
         
         //Buffer Management
         void appendBuffer(const std::string &data);

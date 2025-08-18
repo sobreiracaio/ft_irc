@@ -6,14 +6,14 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/04 14:16:32 by caio              #+#    #+#             */
-/*   Updated: 2025/08/17 22:19:08 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:20:36 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
 
 Client::Client(int client_socket, sockaddr_in client_addr) 
-    : _client_fd(client_socket), _client_addr(client_addr), _isOp(false), 
+    : _client_fd(client_socket), _client_addr(client_addr),  
       _isRegistered(false), _hasPassword(false), _hasNick(false), _hasUser(false)
 {
     //Converts IP address to string in a secure way
@@ -69,11 +69,6 @@ std::string Client::getBuffer() const
     return this->_buffer;
 }
 
-bool Client::isOperator() const
-{
-    return (this->_isOp);
-}
-
 bool Client::isRegistered() const
 {
     return (this->_isRegistered);
@@ -108,11 +103,6 @@ void Client::setUsername(const std::string &username)
 void Client::setRealname(const std::string &realname)
 {
     this->_realname = realname;
-}
-
-void Client::setOperator(bool state)
-{
-    this->_isOp = state;
 }
 
 void Client::appendBuffer(const std::string &data)

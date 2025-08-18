@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/15 15:41:05 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 16:26:24 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,6 @@ std::string Channel::getName() const
 std::string Channel::getTopic() const
 {
     return this->_topic;
-}
-
-std::string Channel::getWelcomeMsg() const
-{
-    return this->_welcome_msg;
 }
 
 std::string Channel::getPassword() const
@@ -77,20 +72,9 @@ void Channel::setTopic(std::string const &topic)
     logMessage("Topic set for channel ", BLUE,this->_name + ": " + topic, GREEN);
 }
 
-void Channel::setPassword(std::string const &password)
-{
-    this->_password = password;
-}
 
-void Channel::setUserLimit(size_t limit)
-{
-    this->_user_limit = limit;
-}
 
-void Channel::setWelcomeMsg(std::string const &msg)
-{
-    this->_welcome_msg = msg;
-}
+
 
 // User management
 bool Channel::addUser(std::string const &user, std::string const &password)
@@ -186,24 +170,6 @@ bool Channel::isOp(std::string const &user) const
     return (this->_operators.find(user) != this->_operators.end());
 }
 
-// Ban system
-bool Channel::banUser(std::string const &user)
-{
-    this->_banned.insert(user);
-    this->removeUser(user); // Remove if present
-    return true;
-}
-
-bool Channel::unbanUser(std::string const &user)
-{
-    return (this->_banned.erase(user) > 0);
-}
-
-bool Channel::isBanned(std::string const &user) const
-{
-    return (this->_banned.find(user) != this->_banned.end());
-}
-
 // Invite system
 bool Channel::inviteUser(std::string const &user)
 {
@@ -268,10 +234,6 @@ bool Channel::isPasswordRequired() const
 
 bool Channel::canUserJoin(std::string const &user, std::string const &password) const
 {
-    // Check if banned
-    if (isBanned(user))
-        return false;
-    
     // Check password
     if (isPasswordRequired() && password != this->_password)
         return false;
