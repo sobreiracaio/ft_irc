@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 17:13:07 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 17:24:37 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 18:04:37 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -532,6 +532,8 @@ int Server::parseCommand(const std::string& data)
         return JOIN;
     if(command == "PRIVMSG")
         return PRIVMSG;
+    if(command == "NOTICE")
+        return NOTICE;
     if(command == "NICK")
         return NICK;
     if(command == "QUIT")
@@ -564,7 +566,8 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
     switch (command_code)
     {
         case JOIN:    this->joinChannel(data, client_fd); break;
-        case PRIVMSG: this->privateMsg(data, client_fd); break;
+        case PRIVMSG: this->sendMessageToTarget(data, client_fd); break;
+        case NOTICE:  this->sendMessageToTarget(data, client_fd, NOTICE); break;
         case NICK:    this->changeNick(data, client_fd); break;
         case PART:    this->partChannel(data, client_fd); break;
         case KICK:    this->kickUser(data, client_fd); break;
@@ -909,8 +912,9 @@ void Server::inviteUser(std::string const &data, int client_fd)
     logMessage("User invited to channel ", GREEN, channelName + ": " + targetNick, BLUE);
 }
 
-void Server::privateMsg(std::string const &data, int client_fd)
+void Server::sendMessageToTarget(std::string const &data, int client_fd, int type)
 {
+    std::string command = (type == PRIVMSG) ? "PRIVMSG" : "NOTICE";
     Client *sender = getClient(client_fd);
     if (!sender)
         return;
@@ -961,7 +965,7 @@ void Server::privateMsg(std::string const &data, int client_fd)
         
         // Send message to channel, excluding sender (to avoid double message for the sender)
         std::string sender_prefix = sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname();
-        channel->sendMessage(this, sender_prefix, message);
+        channel->sendMessage(this, sender_prefix, message, command);
         
     }
     else
@@ -975,12 +979,14 @@ void Server::privateMsg(std::string const &data, int client_fd)
         }
         
         std::string returnMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" +
-                                sender->getHostname() + " PRIVMSG " + target + " " + message + "\r\n";
+                                sender->getHostname() + " " + command + " " + target + " " + message + "\r\n";
         
         if (send(receiver->getFd(), returnMsg.c_str(), returnMsg.length(), 0) == -1)
             logMessage("ERROR: ", RED, "Failed to send private message!", YELLOW, ERR);
     }
 }
+
+void noticeMsg (std::string const &data, int client_fd);
 
 Client *Server::getClientByNick(std::string const &nick)
 {
@@ -1463,6 +1469,8 @@ void Server::_welcomeMessage(Client* client)
     welcome << "#                                                                      #\n";
     welcome << "#  /JOIN   #canal [senha]       -> Entrar em um canal                  #\n";
     welcome << "#  /PRIVMSG alvo :mensagem      -> Enviar mensagem privada             #\n";
+    welcome << "#  /NOTICE alvo mensagem       -> Enviar notificação                   #\n";
+    welcome << "#           OBS: alvo pode ser user ou #canal                          #\n";
     welcome << "#  /NICK   novonick             -> Alterar seu apelido                 #\n";
     welcome << "#  /QUIT                        -> Sair do servidor                    #\n";
     welcome << "#                                                                      #\n";

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:02 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 16:26:30 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 17:57:31 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,8 +102,8 @@ class Channel
 
         //Connection and Communication
         bool connect(Server *server, int client_fd);
-        void sendMessage(Server *server, const std::string &sender, std::string const msg);
-        void sendNotice(Server *server, const std::string &message);
+        void sendMessage(Server *server, const std::string &sender, std::string const msg, std::string command);
+        
 
         //System messages
         void announceJoin(Server *server, Client *client);

@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 16:12:38 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 17:50:54 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@
 #define TOPIC 109
 #define MODE 110
 #define PONG 111
+#define NOTICE 112
 #define NO_COMM -1
 
 
@@ -135,7 +136,7 @@ class Server
         Client *getClient(int client_fd);
         Client *getClientByNick(std::string const &nick);
         void changeNick(std::string const &data, int client_fd);
-        void privateMsg(std::string const &data, int client_fd);
+        void sendMessageToTarget(std::string const &data, int client_fd, int type = PRIVMSG);
         void joinChannel(std::string const &data, int client_fd);
         void partChannel(std::string const &data, int client_fd);
         void quitServer(std::string const &data, int client_fd, std::string msg = "Client quit");

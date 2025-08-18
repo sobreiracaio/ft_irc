@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/05 17:34:25 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 16:26:24 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/18 17:58:28 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -300,7 +300,7 @@ bool Channel::connect(Server *server, int client_fd)
     return true;
 }
 
-void Channel::sendMessage(Server *server, const std::string &sender, std::string const msg)
+void Channel::sendMessage(Server *server, const std::string &sender, std::string const msg, std::string command)
 {
     // Parse sender para extrair apenas o nickname
     std::string sender_nick = sender;
@@ -308,7 +308,7 @@ void Channel::sendMessage(Server *server, const std::string &sender, std::string
     if (exclamation != std::string::npos)
         sender_nick = sender.substr(0, exclamation);
     
-    std::string formatted_msg = ":" + sender + " PRIVMSG #" + _name + " " + msg + "\r\n";
+    std::string formatted_msg = ":" + sender + " " + command + " #" + _name + " " + msg + "\r\n";
     
     for (std::set<std::string>::const_iterator it = _userlist.begin(); it != _userlist.end(); ++it)
     {
@@ -321,21 +321,6 @@ void Channel::sendMessage(Server *server, const std::string &sender, std::string
         {
             if (send(client->getFd(), formatted_msg.c_str(), formatted_msg.length(), 0) == -1)
                 logMessage("ERROR: ", RED, "Failed to send message to " + *it, YELLOW, ERR);
-        }
-    }
-}
-
-void Channel::sendNotice(Server *server, const std::string &message)
-{
-    std::string notice_msg = ":" + server->getServerName() + " NOTICE #" + this->_name + " :" + message + "\r\n";
-    
-    for (std::set<std::string>::const_iterator it = this->_userlist.begin(); it != this->_userlist.end(); ++it)
-    {
-        Client *client = server->getClientByNick(*it);
-        if (client)
-        {
-            if (send(client->getFd(), notice_msg.c_str(), notice_msg.length(), 0) == -1)
-                logMessage("ERROR: ", RED, "Failed to send notice to " + *it, YELLOW, ERR);
         }
     }
 }
