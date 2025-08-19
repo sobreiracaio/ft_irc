@@ -6,7 +6,7 @@
 /*   By: caio <caio@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/31 16:58:52 by caio              #+#    #+#             */
-/*   Updated: 2025/08/18 17:50:54 by caio             ###   ########.fr       */
+/*   Updated: 2025/08/19 19:16:46 by caio             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <csignal>
-#include <cerrno>
+
 
 #include "Utils.hpp"
 #include "Client.hpp"
