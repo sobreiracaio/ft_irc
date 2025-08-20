@@ -25,7 +25,7 @@ class Channel
     private:
         std::string _name;
         std::string _topic;
-        std::string _welcome_msg;  //MESSAGE OF THE DAY
+        std::string _welcome_msg;  //Message of the day
         std::string _password;
         std::string _key;  //for +k mode
         
