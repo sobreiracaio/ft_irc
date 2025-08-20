@@ -157,28 +157,3 @@ void Server::inviteUser(std::string const &data, int client_fd)
 	
 	logMessage("User invited to channel ", GREEN, channelName + ": " + targetNick, BLUE);
 }
-
-void Server::_sendErrorReply(int client_fd, int code, const std::string &message)
-{
-	Client *client = getClient(client_fd);
-	if (!client)
-		return;
-
-	std::ostringstream oss;
-	oss << ":" << _server_name << " " << std::setfill('0') << std::setw(3) << code << " " << (client->getNickname().empty() ? "*" : client->getNickname()) << " :" << message << "\r\n";
-
-	std::string reply = oss.str();
-	if (send(client_fd, reply.c_str(), reply.length(), 0) == -1)
-		logMessage("ERROR: ", RED, "Failed to send error reply!", YELLOW, ERR);
-}
-
-std::vector<std::string> Server::_splitMessage(const std::string &message)
-{
-	std::vector<std::string> result;
-	std::istringstream iss(message);
-	std::string token;
-
-	while (iss >> token)
-		result.push_back(token);
-	return result;
-}

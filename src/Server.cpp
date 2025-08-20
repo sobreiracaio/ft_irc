@@ -1,6 +1,7 @@
 #include "../include/Server.hpp"
 
-Server::Server(int port, std::string password): _port(port), _password(password), _server_fd(-1)
+Server::Server(int port, std::string password): \
+		_port(port), _password(password), _server_fd(-1)
 {
 	this->_server_name = "ircserv";
 }
@@ -17,13 +18,15 @@ int Server::_createSocket()
 
 	if(listen_socket == -1)
 	{
-		logMessage("ERROR: ", RED, "Can't create socket!", YELLOW, ERR);
+		logMessage("ERROR: ", RED, \
+			"Can't create socket!", YELLOW, ERR);
 		return -1;
 	}
 	
 	if (fcntl(listen_socket, F_SETFL, O_NONBLOCK) == -1)
 	{
-		logMessage("ERROR: ", RED, "Failed to set server socket to non-blocking mode!", YELLOW, ERR);
+		logMessage("ERROR: ", RED, \
+			"Failed to set server socket to non-blocking mode!", YELLOW, ERR);
 		close(listen_socket);
 		return -1;
 	}
@@ -33,7 +36,8 @@ int Server::_createSocket()
 	int opt = 1;
 	if (setsockopt(this->_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	{
-		logMessage("ERROR: ", RED, "Failed to set socket options!", YELLOW, ERR);
+		logMessage("ERROR: ", RED, \
+			"Failed to set socket options!", YELLOW, ERR);
 		return (-1);
 	}
 	
@@ -93,7 +97,8 @@ void Server::run()
 	while(true)
 	{
 		time_t now = time(NULL); // Time in seconds
-		int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), 5000);
+		int poll_count = poll(&this->_poll_fds[0], \
+							this->_poll_fds.size(), 5000);
 		if (poll_count == -1)
 		{
 			logMessage("ERROR: ", RED, "Poll failed!", YELLOW, ERR);
@@ -105,7 +110,8 @@ void Server::run()
 			{
 				Client *client = this->getClient(this->_poll_fds[i].fd);
 				
-				if(now - client->getLastActivity() > 300) // 5 minutes idle is automatically disconected
+				// 5 minutes idle is automatically disconected
+				if(now - client->getLastActivity() > 300)
 					this->quitServer("QUIT", client->getFd(), "Idle");
 			}
 		}
@@ -153,6 +159,31 @@ std::string Server::getServerName(void) const
 
 void noticeMsg (std::string const &data, int client_fd);
 
+void Server::_sendErrorReply(int client_fd, int code, const std::string &message)
+{
+	Client *client = getClient(client_fd);
+	if (!client)
+		return;
+
+	std::ostringstream oss;
+	oss << ":" << _server_name << " " << std::setfill('0') << std::setw(3) << code << " " << (client->getNickname().empty() ? "*" : client->getNickname()) << " :" << message << "\r\n";
+
+	std::string reply = oss.str();
+	if (send(client_fd, reply.c_str(), reply.length(), 0) == -1)
+		logMessage("ERROR: ", RED, "Failed to send error reply!", YELLOW, ERR);
+}
+
+std::vector<std::string> Server::_splitMessage(const std::string &message)
+{
+	std::vector<std::string> result;
+	std::istringstream iss(message);
+	std::string token;
+
+	while (iss >> token)
+		result.push_back(token);
+	return result;
+}
+
 void Server::_welcomeMessage(Client* client)
 {
 	std::string user = "" + client->getNickname() + "";
@@ -161,7 +192,7 @@ void Server::_welcomeMessage(Client* client)
 	// Largura total da moldura sem os dois '#'
 	const int totalWidth = 70;
 
-	// Calcula espaços para centralizar o usuário
+	// Calculates spaces to centralize username
 	int padding = totalWidth - static_cast<int>(user.size());
 	if (padding < 0) padding = 0;
 	int padLeft = padding / 2;
@@ -188,14 +219,14 @@ void Server::_welcomeMessage(Client* client)
 	welcome << "#  /MODE   #canal +k/-k senha   -> Definir/remover senha               #\n";
 	welcome << "#  /MODE   #canal +o/-o nick    -> Dar/remover operador                #\n";
 	welcome << "#  /MODE   #canal +l/-l [n]     -> Definir/remover limite              #\n";
-	welcome << "########################################################################\n";  
+	welcome << "########################################################################\n";
 
-	
 	std::string line;
 
 	while(getline(welcome, line, '\n'))
 	{
-		std::string msg = ":" + client->getHostname() + " 001 " + client->getNickname() + " :" + line + "\r\n";
+		std::string msg = ":" + client->getHostname() \
+		+ " 001 " + client->getNickname() + " :" + line + "\r\n";
 		send(client->getFd(), msg.c_str(), msg.length(), 0);
 	}
 }

@@ -68,37 +68,6 @@ bool Client::isRegistered() const
 	return (this->_isRegistered);
 }
 
-void Client::setNickname(const std::string &nickname)
-{
-	std::string formattedNick = nickname; 
-
-	// Remove control chars
-	size_t pos = formattedNick.find_first_of("\r\n");
-	if (pos != std::string::npos)
-		formattedNick.erase(pos);
-
-	// Remove extra spaces
-	pos = formattedNick.find(' ');
-	if (pos != std::string::npos)
-		formattedNick.erase(pos);
-
-	this->_nickname = formattedNick;
-	this->_hasNick = !formattedNick.empty();
-	this->checkRegistrationComplete();
-}
-
-void Client::setUsername(const std::string &username)
-{
-	this->_username = username;
-	this->_hasUser = !username.empty();
-	this->checkRegistrationComplete();
-}
-
-void Client::setRealname(const std::string &realname)
-{
-	this->_realname = realname;
-}
-
 void Client::appendBuffer(const std::string &data)
 {
 	// Prevent buffer overflow
@@ -140,127 +109,6 @@ std::string Client::getNextCompleteMessage()
 	}
 
 	return message;
-}
-
-void Client::setNamesAndPass(std::string const &data)
-{
-	std::istringstream iss(data);
-	std::string line;
-
-	while(std::getline(iss, line))
-	{
-		// Remove \r if its present
-		if(!line.empty() && line[line.length() - 1] == '\r') \
-			line.erase(line.length() - 1);
-		
-		if (line.empty())
-			continue;
-
-		// Parse different register commands
-		if (line.length() >= 5)
-		{
-			std::string cmd = line.substr(0, 5);
-			if(cmd == "PASS ")
-				this->parsePassCommand(line);
-			else if(cmd == "NICK ")
-				this->parseNickCommand(line);
-			else if(cmd == "USER ")
-				this->parseUserCommand(line);
-		}
-	}
-}
-
-void Client::parsePassCommand(const std::string &line)
-{
-	if (line.length() > 5)
-	{
-		std::string password = line.substr(5);
-		
-		// Remove spaces from the beginning
-		size_t start = password.find_first_not_of(" \t");
-		if (start != std::string::npos)
-			password = password.substr(start);
-		
-		// Remove control characters from the end (but keeps content)
-		size_t end = password.find_last_not_of(" \t\r\n");
-		if (end != std::string::npos)
-			password = password.substr(0, end + 1);
-		
-		this->_password = password;
-		this->_hasPassword = !password.empty();
-		
-		logMessage("Password set for client FD=" + itoa(_client_fd) \
-				+ ": ", CYAN, (password.empty() ? "[EMPTY]" \
-				: this->_password), WHITE);
-
-		this->checkRegistrationComplete();
-	}
-}
-
-void Client::parseNickCommand(const std::string &line)
-{
-	if (line.length() > 5)
-	{
-		std::string nickname = line.substr(5);
-		
-		// Remove spaces from beginning
-		size_t start = nickname.find_first_not_of(" \t");
-		if (start != std::string::npos)
-			nickname = nickname.substr(start);
-		
-		// Remove spaces and control characters from the end
-		size_t end = nickname.find_last_not_of(" \t\r\n");
-		if (end != std::string::npos)
-			nickname = nickname.substr(0, end + 1);
-		
-		// Remove spaces in the middle to get the nickname
-		size_t space_pos = nickname.find(' ');
-		if (space_pos != std::string::npos)
-			nickname = nickname.substr(0, space_pos);
-		
-		this->setNickname(nickname);
-		logMessage("Nickname parsed for client FD=" + itoa(_client_fd) \
-			+ ": ", CYAN, nickname, WHITE);
-	}
-}
-
-void Client::parseUserCommand(const std::string &line)
-{
-	if (line.length() > 5)
-	{
-		std::string user_data = line.substr(5);
-		std::istringstream iss(user_data);
-		std::string username, mode, unused;
-
-		// Format: USER <username> <mode> <unused> :<realname>
-		if (iss >> username >> mode >> unused)
-		{
-			this->setUsername(username);
-
-			// Gets the rest of the line as realname (after ":")
-			std::string remaining;
-			std::getline(iss, remaining);
-
-			size_t colon_pos = remaining.find(':');
-			if (colon_pos != std::string::npos)
-			{
-				std::string realname = remaining.substr(colon_pos + 1);
-
-				// Remove spaces from beginning and end of the realname
-				size_t start = realname.find_first_not_of(" \t");
-				if (start != std::string::npos)
-					realname = realname.substr(start);
-				
-				size_t end = realname.find_last_not_of(" \t\r\n");
-				if (end != std::string::npos)
-					realname = realname.substr(0, end + 1);
-				this->setRealname(realname);
-			}
-
-			logMessage("User info parsed for client FD=" + itoa(_client_fd) \
-				+ ": ", CYAN, username, WHITE);
-		}
-	}
 }
 
 void Client::checkRegistrationComplete()
@@ -335,11 +183,6 @@ bool Client::isValidInput(const std::string &input) const
 			return false;
 	}
 	return true;
-}
-
-void Client::setLastActivity (time_t now)
-{
-	this->_lastActivity = now;
 }
 
 time_t Client::getLastActivity (void)

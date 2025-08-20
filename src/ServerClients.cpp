@@ -251,3 +251,4 @@ void Server::_removeClient(int client_fd)
     close(client_fd);
     logMessage("Client disconnected! FD = ", RED, itoa(client_fd), YELLOW);
 }
+
