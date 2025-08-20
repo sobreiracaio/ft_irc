@@ -6,17 +6,7 @@ Server::Server(int port, std::string password): _port(port), _password(password)
 }
 
 Server::~Server()
-{
-	std::map<int, Client*>::iterator it;
-	for (it = this->_clients.begin(); it != this->_clients.end(); it++)
-		delete it->second;
-	this->_clients.clear();
-
-	std::map<std::string, Channel*>::iterator channel_it;
-	for (channel_it = this->_channels.begin(); channel_it != this->_channels.end(); channel_it++)
-		delete channel_it->second;
-	this->_channels.clear();
-	
+{	
 	if(this->_server_fd > 0)
 		close(this->_server_fd);
 }
@@ -88,7 +78,7 @@ bool Server::serverInit()
 			this->_listenSocket() == -1)
 		return (false);
 	
-	// POLL SETUP FOR SERVER SOCKET
+	// Poll setup for server socket
 	struct pollfd server_pollfd;
 	server_pollfd.fd = this->_server_fd;
 	server_pollfd.events = POLLIN;
@@ -102,7 +92,7 @@ void Server::run()
 {
 	while(true)
 	{
-		time_t now = time(NULL); //time in seconds
+		time_t now = time(NULL); // Time in seconds
 		int poll_count = poll(&this->_poll_fds[0], this->_poll_fds.size(), 5000);
 		if (poll_count == -1)
 		{
@@ -126,13 +116,12 @@ void Server::run()
 				break;
 			if(this->_poll_fds[i].revents & POLLIN)
 			{
-				if(this->_poll_fds[i].fd == this->_server_fd) //NEW CONNECTION
+				if(this->_poll_fds[i].fd == this->_server_fd)
 				{
-					this->_acceptNewClient(); //FUNCTION TO ACCEPT CLIENT
+					this->_acceptNewClient();
 				}
 				else
 				{
-					//HANDLING CLIENT DATA
 					this->_handleClientData(this->_poll_fds[i].fd);
 					if(i >= this->_poll_fds.size())
 						break;
@@ -150,49 +139,6 @@ void Server::run()
 			}
 		}
 	}
-}
-
-bool Server::_checkPassword(std::string const &client_pass)
-{
-	return (this->_password == client_pass);
-}
-
-bool Server::_isValidNickname(const std::string &nickname)
-{
-	if (nickname.empty() || nickname.length() > MAX_NICK_LENGTH)
-		return false;
-	
-	//First char must be a letter or a valid special char
-	char first = nickname[0];
-	if (!isalpha(first) && first != '[' && first != ']' && first != '\\' && 
-		first != '`' && first != '_' && first != '^' && first != '{' && first != '}')
-		return false;
-
-	//Other characters can be alphanumericals or special chars
-	for (size_t i = 1; i < nickname.length(); i++)
-	{
-		char c = nickname[i];
-		if (!isalnum(c) && c != '[' && c != ']' && c != '\\' && 
-			c != '`' && c != '_' && c != '^' && c != '{' && c != '}' && c != '-')
-			return false;
-	}
-	return true;
-}
-
-bool Server::_isValidChannelName(const std::string &channelName)
-{
-	if (channelName.empty() || channelName.length() > MAX_CHANNEL_NAME)
-		return false;
-
-	// Channel name cannot contain spaces, commas or control chars
-	for (size_t i = 0; i < channelName.length(); i++)
-	{
-		char c = channelName[i];
-		if (c == ' ' || c == ',' || c == '\a' || c == '\0' \
-			|| c == '\r' || c == '\n')
-			return false;
-	}
-	return true;
 }
 
 std::vector<std::string> Server::_splitMessage(const std::string &message)
@@ -268,7 +214,7 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
 {
 	Client *client = this->getClient(client_fd);
 
-	if (command_code != QUIT && client) //QUIT does not need activity feedback
+	if (command_code != QUIT && client) // QUIT does not need activity feedback
 		client->setLastActivity(time(NULL));
 
 	switch (command_code)
@@ -286,57 +232,12 @@ bool Server::executeCommand(int client_fd, int command_code, std::string const &
 
 		case QUIT:
 			this->quitServer(data, client_fd);
-			return false; //Client removed
+			return false; // Client removed
 
 		default:
 			break;
 	}
 	return true;
-}
-
-std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
-{
-	std::string modifiedNickname = nickname;
-	
-	// Remove control characters
-	std::string cleanNick;
-	for (size_t i = 0; i < modifiedNickname.length(); i++)
-	{
-		unsigned char c = static_cast<unsigned char>(modifiedNickname[i]);
-		// Remove every control character except normal spaces
-		if (c >= 32 && c != 127) // Printable characters
-			cleanNick += c;
-		else if (c == ' ') // Allows space, to be handled later
-			break; // Para no primeiro espaço
-	}
-	modifiedNickname = cleanNick;
-	
-	// Remove espaços extras
-	size_t space_pos = modifiedNickname.find(' ');
-	if (space_pos != std::string::npos)
-		modifiedNickname.erase(space_pos);
-	
-	if (!_isValidNickname(modifiedNickname))
-	{
-		this->_sendErrorReply(client_fd, ERR_ERRONEUSNICKNAME, "Erroneous nickname");
-		return modifiedNickname;
-	}
-	
-	// Verificação melhorada para nicks duplicados
-	std::map<int, Client*>::iterator it;
-	for (it = this->_clients.begin(); it != this->_clients.end(); it++)
-	{
-		Client *client = it->second;
-		// Verifica se o cliente existe, está ativo e tem o mesmo nick
-		if (client && client->getFd() != client_fd && !client->getNickname().empty() && 
-			client->getNickname() == modifiedNickname)
-		{
-			this->_sendErrorReply(client_fd, ERR_NICKNAMEINUSE, modifiedNickname + " :Nickname is already in use");
-			modifiedNickname += "_";
-			break;
-		}
-	}
-	return modifiedNickname;
 }
 
 
@@ -1065,20 +966,20 @@ void Server::_welcomeMessage(Client* client)
 
 void Server::cleanUp()
 {
-	// libera todos os clients
+	// Free all clients
 	for (std::map<int, Client*>::iterator it = this->_clients.begin();
 		 it != this->_clients.end(); ++it) {
-		delete it->second;   // desaloca o Client*
+		delete it->second;   //Deletes the second on the ::map, which is Client*
 	}
 	this->_clients.clear();
 
-	// libera canais, se também forem new'd
+	//Free all channels
 	for (std::map<std::string, Channel*>::iterator it = this->_channels.begin();
 		 it != this->_channels.end(); ++it) {
 		delete it->second;
 	}
 	this->_channels.clear();
 
-	// pollfds é vector<pollfd> (structs na stack), então basta limpar
+	// pollfds is vector<pollfd> (structs na stack), então basta limpar
 	std::vector<pollfd>().swap(this->_poll_fds);
 }
