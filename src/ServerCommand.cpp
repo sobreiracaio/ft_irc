@@ -121,7 +121,7 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	
 	// Broadcast topic change to channel
 	std::string topic_change = ":" + client->getNickname() + "!" + client->getUsername() + "@" + 
-							  client->getHostname() + " TOPIC #" + channelName + " :" + newTopic + "\r\n";
+		client->getHostname() + " TOPIC #" + channelName + " :" + newTopic + "\r\n";
 	
 	std::vector<std::string> users = channel->getUserList();
 	for (size_t i = 0; i < users.size(); i++)

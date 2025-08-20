@@ -143,14 +143,14 @@ void Server::inviteUser(std::string const &data, int client_fd)
 	
 	// Send invite to target
 	std::string invite_msg = ":" + inviter->getNickname() + "!" + inviter->getUsername() + "@" + 
-							inviter->getHostname() + " INVITE " + targetNick + " #" + channelName + "\r\n";
+				inviter->getHostname() + " INVITE " + targetNick + " #" + channelName + "\r\n";
 	
 	if (send(target->getFd(), invite_msg.c_str(), invite_msg.length(), 0) == -1)
 		logMessage("ERROR: ", RED, "Failed to send INVITE", YELLOW, ERR);
 	
 	// Confirm to inviter
 	std::string confirm_msg = ":" + _server_name + " 341 " + inviter->getNickname() + " " + 
-							 targetNick + " #" + channelName + "\r\n";
+				targetNick + " #" + channelName + "\r\n";
 	
 	if (send(client_fd, confirm_msg.c_str(), confirm_msg.length(), 0) == -1)
 		logMessage("ERROR: ", RED, "Failed to send INVITE confirmation", YELLOW, ERR);

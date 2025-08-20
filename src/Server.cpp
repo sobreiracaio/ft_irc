@@ -234,15 +234,15 @@ void Server::_welcomeMessage(Client* client)
 void Server::cleanUp()
 {
 	// Free all clients
-	for (std::map<int, Client*>::iterator it = this->_clients.begin();
-		 it != this->_clients.end(); ++it) {
-		delete it->second;   //Deletes the second on the ::map, which is Client*
+	for (std::map<int, Client*>::iterator it = this->_clients.begin(); \
+	it != this->_clients.end(); ++it) {
+		delete it->second; //Deletes the second on the ::map, which is Client*
 	}
 	this->_clients.clear();
 
 	//Free all channels
-	for (std::map<std::string, Channel*>::iterator it = this->_channels.begin();
-		 it != this->_channels.end(); ++it) {
+	for (std::map<std::string, Channel*>::iterator it = \
+		this->_channels.begin(); it != this->_channels.end(); ++it) {
 		delete it->second;
 	}
 	this->_channels.clear();
