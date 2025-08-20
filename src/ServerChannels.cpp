@@ -335,3 +335,76 @@ void Server::handleChannelMode(std::string const &data, int client_fd)
 		logMessage("Mode changed for channel ", BLUE, channelName + ": " + changes, GREEN);
 	}
 }
+void Server::sendMessageToTarget(std::string const &data, int client_fd, int type)
+{
+	std::string command = (type == PRIVMSG) ? "PRIVMSG" : "NOTICE";
+	Client *sender = getClient(client_fd);
+	if (!sender)
+		return;
+	
+	std::vector<std::string> tokens = _splitMessage(data);
+	
+	if (tokens.size() < 2)
+	{
+		this->_sendErrorReply(client_fd, ERR_NORECIPIENT, "No recipient given (PRIVMSG)");
+		return;
+	}
+	
+	size_t colon = data.find(':', 8);
+	if (colon == std::string::npos)
+	{
+		this->_sendErrorReply(client_fd, ERR_NOTEXTTOSEND, "No text to send");
+		return;
+	}
+	
+	std::string target = tokens[1];
+	std::string message = data.substr(colon);
+	
+	if (target[0] == '#')
+	{
+		// Message to channel
+		std::string channel_name = target.substr(1);
+		Channel *channel = getChannelByName(channel_name);
+		
+		if (!channel)
+		{
+			this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, target + " :No such channel");
+			return;
+		}
+		
+		//Verify is user is in channel (for +n mode)
+		if (channel->hasMode(MODE_NO_EXTERNAL_MSGS) && !channel->hasUser(sender->getNickname()))
+		{
+			this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
+			return;
+		}
+		
+		// Verify moderated mode
+		if (channel->hasMode(MODE_MODERATED) && !channel->isOp(sender->getNickname()))
+		{
+			this->_sendErrorReply(client_fd, ERR_CANNOTSENDTOCHAN, target + " :Cannot send to channel");
+			return;
+		}
+		
+		// Send message to channel, excluding sender (to avoid double message for the sender)
+		std::string sender_prefix = sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname();
+		channel->sendMessage(this, sender_prefix, message, command);
+		
+	}
+	else
+	{
+		// Private message
+		Client *receiver = getClientByNick(target);
+		if (!receiver)
+		{
+			this->_sendErrorReply(client_fd, ERR_NOSUCHNICK, target + " :No such nick/channel");
+			return;
+		}
+		
+		std::string returnMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" +
+								sender->getHostname() + " " + command + " " + target + " " + message + "\r\n";
+		
+		if (send(receiver->getFd(), returnMsg.c_str(), returnMsg.length(), 0) == -1)
+			logMessage("ERROR: ", RED, "Failed to send private message!", YELLOW, ERR);
+	}
+}
