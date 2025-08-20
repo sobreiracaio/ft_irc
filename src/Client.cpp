@@ -32,6 +32,11 @@ std::string Client::getHostname() const
     return this->_hostname;
 }
 
+sockaddr_in Client::getClientAddr() const
+{
+    return this->_client_addr;
+}
+
 std::string Client::getNickname() const
 {
     return this->_nickname;

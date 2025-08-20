@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <csignal>
 
+#include <unistd.h>  // close
 
 #include "Utils.hpp"
 #include "Client.hpp"

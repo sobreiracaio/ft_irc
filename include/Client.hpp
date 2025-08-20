@@ -48,6 +48,7 @@ class Client
         std::string getHostname() const;
         std::string getPassword() const;
         std::string getBuffer() const;
+        sockaddr_in getClientAddr() const;
         bool isRegistered() const;
         
         //Setters
