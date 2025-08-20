@@ -55,7 +55,8 @@ time_t Channel::getCreationTime() const
 void Channel::setTopic(std::string const &topic)
 {
 	this->_topic = topic;
-	logMessage("Topic set for channel ", BLUE,this->_name + ": " + topic, GREEN);
+	logMessage("Topic set for channel ", BLUE,this->_name + ": " \
+		+ topic, GREEN);
 }
 
 // User management
@@ -117,40 +118,14 @@ std::vector<std::string> Channel::getUserList() const
 std::string Channel::getUserListString() const
 {
 	std::string result;
-	for (std::set<std::string>::const_iterator it = this->_userlist.begin(); it != this->_userlist.end(); ++it)
+	for (std::set<std::string>::const_iterator it = this->_userlist.begin(); \
+		it != this->_userlist.end(); ++it)
 	{
 		if (!result.empty())
 			result += " ";
 		result += this->_getUserModePrefix(*it) + *it;
 	}
 	return result;
-}
-
-// Operators management
-bool Channel::addOp(std::string const &user)
-{
-	if (!hasUser(user))
-		return false;
-
-	this->_operators.insert(user);
-	logMessage("User became operator in ", GREEN,this->_name + ": " + user, BLUE);
-	return true;
-}
-
-bool Channel::removeOp(std::string const &user)
-{
-	if (this->_operators.find(user) == this->_operators.end())
-		return false;
-
-	this->_operators.erase(user);
-	logMessage("User lost operator in ", YELLOW,this->_name + ": " \
-				+ user, BLUE);
-	return true;
-}
-
-bool Channel::isOp(std::string const &user) const
-{
-	return (this->_operators.find(user) != this->_operators.end());
 }
 
 // Handle invitation
@@ -164,51 +139,6 @@ bool Channel::inviteUser(std::string const &user)
 bool Channel::isInvited(std::string const &user) const
 {
 	return (this->_invited.find(user) != this->_invited.end());
-}
-
-// Modes management
-bool Channel::setMode(char mode, bool enable, std::string const &param)
-{
-	if (enable)
-	{
-		this->_modes.insert(mode);
-		if (mode == MODE_KEY)
-			this->_key = param;
-		else if (mode == MODE_LIMIT && !param.empty())
-			this->_user_limit = atoi(param.c_str());
-	}
-	else
-	{
-		this->_modes.erase(mode);
-		if (mode == MODE_KEY)
-			this->_key.clear();
-		else if (mode == MODE_LIMIT)
-			this->_user_limit = 0;
-	}
-
-	logMessage("Mode change in ", BLUE,this->_name + ": " \
-				+ (enable ? "+" : "-") + mode, GREEN);
-	return true;
-}
-
-bool Channel::hasMode(char mode) const
-{
-	return this->_hasMode(mode);
-}
-
-std::string Channel::getModeString() const
-{
-	std::string modes = "+";
-	for (std::set<char>::const_iterator it = this->_modes.begin(); \
-		it != this->_modes.end(); ++it)
-		modes += *it;
-
-	if (hasMode(MODE_KEY) && !_key.empty())
-		modes += " " + this->_key;
-	if (hasMode(MODE_LIMIT) &&this->_user_limit > 0)
-		modes += " " + itoa(_user_limit);
-
-	return modes;
 }
 
 // Validations
@@ -252,113 +182,6 @@ bool Channel::canUserSetTopic(std::string const &user) const
 	return true;
 }
 
-// Connection and Communication
-bool Channel::connect(Server *server, int client_fd)
-{
-	Client *client = server->getClient(client_fd);
-	if (!client)
-		return false;
-
-	std::string nick = client->getNickname();
-
-	// Send JOIN confirmation
-	std::string join_msg = ":" + nick + "!" + client->getUsername() \
-	+ "@" + client->getHostname() + " JOIN #" + this->_name + "\r\n";
-	send(client_fd, join_msg.c_str(), join_msg.length(), 0);
-
-	// Send topic if exists
-	if (!_topic.empty())
-	{
-		std::string topic_msg = ":" + server->getServerName() + " 332 " \
-		+ nick + " #" + this->_name + " :" + this->_topic + "\r\n";
-		send(client_fd, topic_msg.c_str(), topic_msg.length(), 0);
-	}
-	
-	// Send NAMES list
-	std::string names_msg = ":" + server->getServerName() + " 353 " \
-	+ nick + " = #" + this->_name + " :" + getUserListString() + "\r\n";
-	send(client_fd, names_msg.c_str(), names_msg.length(), 0);
-	
-	std::string end_names = ":" + server->getServerName() + " 366 " \
-	+ nick + " #" + this->_name + " :End of /NAMES list\r\n";
-	send(client_fd, end_names.c_str(), end_names.length(), 0);
-
-	client->joinChannel("#" + this->_name);
-	return true;
-}
-
-void Channel::sendMessage(Server *server, const std::string &sender, \
-std::string const msg, std::string command)
-{
-	// Parse sender nickname
-	std::string sender_nick = sender;
-	size_t exclamation = sender.find('!');
-	if (exclamation != std::string::npos)
-		sender_nick = sender.substr(0, exclamation);
-
-	std::string formatted_msg = ":" + sender + " " + command \
-	+ " #" + _name + " " + msg + "\r\n";
-
-	for (std::set<std::string>::const_iterator it = _userlist.begin(); \
-		it != _userlist.end(); ++it)
-	{
-		// Avoid delivering the message to its own sender
-		if (*it == sender_nick)
-			continue;
-
-		Client *client = server->getClientByNick(*it);
-		if (client)
-		{
-			if (send(client->getFd(), formatted_msg.c_str(), \
-				formatted_msg.length(), 0) == -1)
-				logMessage("ERROR: ", RED, "Failed to send message to " \
-				+ *it, YELLOW, ERR);
-		}
-	}
-}
-
-// Handle System Messages
-void Channel::announceJoin(Server *server, Client *client)
-{
-	std::string join_msg = ":" + client->getNickname() \
-	+ "!" + client->getUsername() + "@" + client->getHostname() \
-	+ " JOIN #" + this->_name + "\r\n";
-	this->_boreadcastToChannel(server, join_msg);
-}
-
-void Channel::announcePart(Server *server, Client *client, \
-const std::string &reason)
-{
-	std::string part_msg = ":" + client->getNickname() \
-	+ "!" + client->getUsername() + "@" + client->getHostname() \
-	+ " PART #" + this->_name;
-	if (!reason.empty())
-		part_msg += " :" + reason;
-	part_msg += "\r\n";
-
-	this->_boreadcastToChannel(server, part_msg);
-}
-
-void Channel::announceQuit(Server *server, Client *client, \
-	const std::string &reason)
-{
-	std::string quit_msg = ":" + client->getNickname() \
-	+ "!" + client->getUsername() + "@" + client->getHostname() \
-	+ " QUIT";
-	if (!reason.empty())
-		quit_msg += " :" + reason;
-	quit_msg += "\r\n";
-
-	this->_boreadcastToChannel(server, quit_msg, client->getFd());
-}
-
-void Channel::announceNickChange(Server *server, const std::string &oldNick, \
-	const std::string &newNick)
-{
-	std::string nick_msg = ":" + oldNick + " NICK :" + newNick + "\r\n";
-	this->_boreadcastToChannel(server, nick_msg);
-}
-
 // Empty channel checking
 bool Channel::isEmpty() const
 {
@@ -394,25 +217,23 @@ std::string Channel::_getUserModePrefix(const std::string &nickname) const
 bool Channel::updateUserNick(const std::string &oldNick, const std::string &newNick)
 {
 	if (this->_userlist.find(oldNick) == this->_userlist.end())
-		return false; // Usuário não estava no canal
-	
-	// Remove o nick antigo
-	this->_userlist.erase(oldNick);
-	
-	// Adiciona o novo nick
-	this->_userlist.insert(newNick);
-	
-	// Se era operador, atualiza
+		return false; // User is not in the channel
+
+	this->_userlist.erase(oldNick); // Removes old nickname
+	this->_userlist.insert(newNick); // Adds new nickname
+
+	// Updates operator nickname
 	if (this->_operators.find(oldNick) != this->_operators.end())
 	{
 		this->_operators.erase(oldNick);
 		this->_operators.insert(newNick);
 	}
 	
-	// Remove das listas de banidos/convidados se presente
+	// Removes old nickname from banned and invited lists
 	this->_banned.erase(oldNick);
 	this->_invited.erase(oldNick);
 	
-	logMessage("Nick updated in channel ", GREEN, this->_name + ": " + oldNick + " -> " + newNick, BLUE);
+	logMessage("Nick updated in channel ", GREEN, this->_name \
+		+ ": " + oldNick + " -> " + newNick, BLUE);
 	return true;
 }

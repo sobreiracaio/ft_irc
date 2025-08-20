@@ -27,7 +27,9 @@ SRCS			=	$(SRC_DIR)/main.cpp \
 					$(SRC_DIR)/ServerCommand.cpp \
 					$(SRC_DIR)/ServerModeration.cpp \
 					$(SRC_DIR)/Utils.cpp \
-					$(SRC_DIR)/Channel.cpp
+					$(SRC_DIR)/Channel.cpp \
+					$(SRC_DIR)/ChannelCommunication.cpp \
+					$(SRC_DIR)/ChannelModes.cpp
 
 
 OBJS	:= $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%.o,$(SRCS))
