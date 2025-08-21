@@ -19,12 +19,11 @@ void Server::_acceptNewClient(void)
 		return;
 	}
 	
-	//CREATE NEW CLIENT AND ADD IT TO THE MAP ACCORDING TO ITS FD NUMBER(KEY)
-
+	//Create new client and add it to the map according to its fd 
 	Client* new_client = new Client(client_socket, client_addr);
 	this->_clients[client_socket] = new_client;
 	
-	//POLL SETUP FOR CLIENT SOCKET
+	//Poll setup for client socket
 	struct pollfd client_pollfd;
 	client_pollfd.fd = client_socket;
 	client_pollfd.events = POLLIN;
@@ -53,24 +52,24 @@ void Server::_handleClientData(int client_fd)
 	   
 	buffer[bytes_received] = '\0';
 	
-	// Limpa caracteres de controle problemáticos do buffer
+	// // Clean problematic control characters from buffer
 	std::string data;
 	for (int i = 0; i < bytes_received; i++)
 	{
 		unsigned char c = static_cast<unsigned char>(buffer[i]);
 		
-		// Filtrar caracteres de controle perigosos, mas manter \r\n
+		// Filter control characters, but keep \r\n
 		if (c >= 32 || c == '\r' || c == '\n' || c == '\t')
 		{
 			data += c;
 		}
 		else if (c == 4) // Ctrl+D (EOF)
 		{
-			// Ignora Ctrl+D mas continua processamento
-			logMessage("Ctrl+D received from FD ", YELLOW, itoa(client_fd), WHITE);
+			// Ignores Ctrl+D but continues processing
+			logMessage("Ctrl+D received from FD ", YELLOW, \
+				 itoa(client_fd), WHITE);
 			continue;
 		}
-		
 	}
 	
 	if (data.empty())

@@ -40,7 +40,7 @@ std::string Channel::getModeString() const
 	if (hasMode(MODE_KEY) && !_key.empty())
 		modes += " " + this->_key;
 	if (hasMode(MODE_LIMIT) &&this->_user_limit > 0)
-		modes += " " + itoa(_user_limit);
+		modes += " " + itoa(this->_user_limit);
 
 	return modes;
 }

@@ -85,7 +85,8 @@ bool Channel::addUser(std::string const &user, std::string const &password)
 	// Remove from invite list if present
 	this->_invited.erase(cleanUser);
 
-	logMessage("User joined channel ", GREEN, this->_name + ": " + cleanUser, BLUE);
+	logMessage("User joined channel ", GREEN, this->_name + ": " \
+		+ cleanUser, BLUE);
 	return true;
 }
 
@@ -196,13 +197,15 @@ bool Channel::_hasMode(char mode) const
 
 void Channel::_boreadcastToChannel(Server *server, const std::string &message, int exclude_fd)
 {
-	for (std::set<std::string>::const_iterator it = this->_userlist.begin(); it != this->_userlist.end(); ++it)
+	for (std::set<std::string>::const_iterator it = this->_userlist.begin(); \
+		it != this->_userlist.end(); ++it)
 	{
 		Client *client = server->getClientByNick(*it);
 		if (client && client->getFd() != exclude_fd)
 		{
 			if (send(client->getFd(), message.c_str(), message.length(), 0) == -1)
-				logMessage("ERROR: ", RED, "Failed to broadcast to " + *it, YELLOW, ERR);
+				logMessage("ERROR: ", RED, "Failed to broadcast to " \
+					+ *it, YELLOW, ERR);
 		}
 	}
 }

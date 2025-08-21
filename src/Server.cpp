@@ -189,7 +189,7 @@ void Server::_welcomeMessage(Client* client)
 	std::string user = "" + client->getNickname() + "";
 	std::stringstream welcome;
 
-	// Largura total da moldura sem os dois '#'
+	// Total frame width without the '#'
 	const int totalWidth = 70;
 
 	// Calculates spaces to centralize username
