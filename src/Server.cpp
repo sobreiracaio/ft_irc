@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*   By: gigardin <gigardin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025-08-22 13:58:36 by crocha-s          #+#    #+#             */
-/*   Updated: 2025-08-22 13:58:36 by crocha-s         ###   ########.fr       */
+/*   Created: 2025/08/22 13:58:36 by crocha-s          #+#    #+#             */
+/*   Updated: 2025/08/22 14:00:08 by gigardin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -220,11 +220,12 @@ void Server::_welcomeMessage(Client* client)
 	welcome << "#           OBS: alvo pode ser user ou #canal                          #\n";
 	welcome << "#  /NICK   novonick             -> Alterar seu apelido                 #\n";
 	welcome << "#  /QUIT                        -> Sair do servidor                    #\n";
+	welcome << "#  /PART   #canal [Motivo]      -> Sair de um chat                     #\n";
 	welcome << "#                                                                      #\n";
 	welcome << "#  Comandos de canal:                                                  #\n";
 	welcome << "#  /KICK   #canal nick [motivo] -> Expulsar usuário                    #\n";
 	welcome << "#  /INVITE nick #canal          -> Convidar usuário                    #\n";
-	welcome << "#  /TOPIC  #canal [tópico]      -> Definir/ver tópico                  #\n";
+	welcome << "#  /TOPIC  #canal :[tópico]      -> Definir/ver tópico                 #\n";
 	welcome << "#  /MODE   #canal +i/-i         -> Modo convidado obrigatório/livre    #\n";
 	welcome << "#  /MODE   #canal +t/-t         -> Apenas operadores mudam tópico      #\n";
 	welcome << "#  /MODE   #canal +k/-k senha   -> Definir/remover senha               #\n";
