@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerModeration.cpp                               :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:59:14 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:59:14 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 void Server::kickUser(std::string const &data, int client_fd)
@@ -6,7 +18,8 @@ void Server::kickUser(std::string const &data, int client_fd)
 	
 	if (tokens.size() < 3)
 	{
-		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, "KICK :Not enough parameters");
+		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, \
+			"KICK :Not enough parameters");
 		return;
 	}
 	
@@ -25,7 +38,8 @@ void Server::kickUser(std::string const &data, int client_fd)
 	Channel *channel = getChannelByName(channelName);
 	if (!channel)
 	{
-		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" + channelName + " :No such channel");
+		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" \
+			+ channelName + " :No such channel");
 		return;
 	}
 	
@@ -36,13 +50,15 @@ void Server::kickUser(std::string const &data, int client_fd)
 	// Check if kicker is in channel and is operator
 	if (!channel->hasUser(kicker->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" + channelName + " :You're not on that channel");
+		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" \
+			+ channelName + " :You're not on that channel");
 		return;
 	}
 	
 	if (!channel->isOp(kicker->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" + channelName + " :You're not channel operator");
+		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" \
+			+ channelName + " :You're not channel operator");
 		return;
 	}
 	
@@ -50,19 +66,21 @@ void Server::kickUser(std::string const &data, int client_fd)
 	Client *target = getClientByNick(targetNick);
 	if (!target)
 	{
-		this->_sendErrorReply(client_fd, ERR_NOSUCHNICK, targetNick + " :No such nick/channel");
+		this->_sendErrorReply(client_fd, ERR_NOSUCHNICK, targetNick \
+			+ " :No such nick/channel");
 		return;
 	}
 	
 	if (!channel->hasUser(targetNick))
 	{
-		this->_sendErrorReply(client_fd, ERR_USERNOTINCHANNEL, targetNick + " #" + channelName + " :They aren't on that channel");
+		this->_sendErrorReply(client_fd, ERR_USERNOTINCHANNEL, targetNick \
+			+ " #" + channelName + " :They aren't on that channel");
 		return;
 	}
 	
 	// Send KICK message to all channel members
-	std::string kick_msg = ":" + kicker->getNickname() + "!" + kicker->getUsername() + "@" + 
-						  kicker->getHostname() + " KICK #" + channelName + " " + targetNick + " :" + reason + "\r\n";
+	std::string kick_msg = ":" + kicker->getNickname() + "!" + kicker->getUsername() + "@" + kicker->getHostname() + " KICK #" \
+		+ channelName  + " " + targetNick + " :" + reason + "\r\n";
 	
 	// Broadcast to channel
 	std::vector<std::string> users = channel->getUserList();
@@ -71,8 +89,9 @@ void Server::kickUser(std::string const &data, int client_fd)
 		Client *user = getClientByNick(users[i]);
 		if (user)
 		{
-			if (send(user->getFd(), kick_msg.c_str(), kick_msg.length(), 0) == -1)
-				logMessage("ERROR: ", RED, "Failed to send KICK message", YELLOW, ERR);
+			if (send(user->getFd(), kick_msg.c_str(), \kick_msg.length(), 0) == -1)
+				logMessage("ERROR: ", RED, \
+					"Failed to send KICK message", YELLOW, ERR);
 		}
 	}
 	
@@ -80,7 +99,8 @@ void Server::kickUser(std::string const &data, int client_fd)
 	channel->removeUser(targetNick);
 	target->leaveChannel("#" + channelName);
 	
-	logMessage("User kicked from channel ", YELLOW, channelName + ": " + targetNick, RED);
+	logMessage("User kicked from channel ", YELLOW, channelName + \
+		": " + targetNick, RED);
 }
 
 void Server::inviteUser(std::string const &data, int client_fd)
@@ -89,7 +109,8 @@ void Server::inviteUser(std::string const &data, int client_fd)
 	
 	if (tokens.size() < 3)
 	{
-		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, "INVITE :Not enough parameters");
+		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, \
+			"INVITE :Not enough parameters");
 		return;
 	}
 	
@@ -106,54 +127,62 @@ void Server::inviteUser(std::string const &data, int client_fd)
 	Channel *channel = getChannelByName(channelName);
 	if (!channel)
 	{
-		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" + channelName + " :No such channel");
+		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" \
+			+ channelName + " :No such channel");
 		return;
 	}
 	
 	// Check if inviter is in channel
 	if (!channel->hasUser(inviter->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" + channelName + " :You're not on that channel");
+		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" \
+			+ channelName + " :You're not on that channel");
 		return;
 	}
 	
 	// Check if inviter has permission (if channel is +i, only ops can invite)
 	if (channel->hasMode(MODE_INVITE_ONLY) && !channel->isOp(inviter->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" + channelName + " :You're not channel operator");
+		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" \
+			+ channelName + " :You're not channel operator");
 		return;
 	}
 	
 	Client *target = getClientByNick(targetNick);
 	if (!target)
 	{
-		this->_sendErrorReply(client_fd, ERR_NOSUCHNICK, targetNick + " :No such nick/channel");
+		this->_sendErrorReply(client_fd, ERR_NOSUCHNICK, targetNick \
+			+ " :No such nick/channel");
 		return;
 	}
 	
 	// Check if target is already in channel
 	if (channel->hasUser(targetNick))
 	{
-		this->_sendErrorReply(client_fd, ERR_USERONCHANNEL, targetNick + " #" + channelName + " :is already on channel");
+		this->_sendErrorReply(client_fd, ERR_USERONCHANNEL, targetNick \
+			+ " #" + channelName + " :is already on channel");
 		return;
 	}
 	
-	// Add to invite list
+	// Adds target to invite list
 	channel->inviteUser(targetNick);
 	
-	// Send invite to target
-	std::string invite_msg = ":" + inviter->getNickname() + "!" + inviter->getUsername() + "@" + 
-				inviter->getHostname() + " INVITE " + targetNick + " #" + channelName + "\r\n";
+	// Sends invite to target
+	std::string invite_msg = ":" + inviter->getNickname() + "!" \
+	+ inviter->getUsername() + "@" + inviter->getHostname() + " INVITE " \
+	+ targetNick + " #" + channelName + "\r\n";
 	
 	if (send(target->getFd(), invite_msg.c_str(), invite_msg.length(), 0) == -1)
 		logMessage("ERROR: ", RED, "Failed to send INVITE", YELLOW, ERR);
 	
-	// Confirm to inviter
-	std::string confirm_msg = ":" + _server_name + " 341 " + inviter->getNickname() + " " + 
-				targetNick + " #" + channelName + "\r\n";
+	// Sends invite confirmation to inviter
+	std::string confirm_msg = ":" + _server_name + " 341 " \
+	+ inviter->getNickname() + " " + targetNick + " #" + channelName + "\r\n";
 	
 	if (send(client_fd, confirm_msg.c_str(), confirm_msg.length(), 0) == -1)
-		logMessage("ERROR: ", RED, "Failed to send INVITE confirmation", YELLOW, ERR);
+		logMessage("ERROR: ", RED, \
+			"Failed to send INVITE confirmation", YELLOW, ERR);
 	
-	logMessage("User invited to channel ", GREEN, channelName + ": " + targetNick, BLUE);
+	logMessage("User invited to channel ", GREEN, \
+		channelName + ": " + targetNick, BLUE);
 }

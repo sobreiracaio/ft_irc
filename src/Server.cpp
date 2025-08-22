@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:58:36 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:58:36 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 Server::Server(int port, std::string password): \
@@ -157,8 +169,6 @@ std::string Server::getServerName(void) const
 	return (this->_server_name);
 }
 
-void noticeMsg (std::string const &data, int client_fd);
-
 void Server::_sendErrorReply(int client_fd, int code, const std::string &message)
 {
 	Client *client = getClient(client_fd);
@@ -194,7 +204,8 @@ void Server::_welcomeMessage(Client* client)
 
 	// Calculates spaces to centralize username
 	int padding = totalWidth - static_cast<int>(user.size());
-	if (padding < 0) padding = 0;
+	if (padding < 0) 
+		padding = 0;
 	int padLeft = padding / 2;
 	int padRight = padding - padLeft;
 
@@ -235,7 +246,7 @@ void Server::cleanUp()
 {
 	// Free all clients
 	for (std::map<int, Client*>::iterator it = this->_clients.begin(); \
-	it != this->_clients.end(); ++it) {
+		it != this->_clients.end(); ++it) {
 		delete it->second; //Deletes the second on the ::map, which is Client*
 	}
 	this->_clients.clear();

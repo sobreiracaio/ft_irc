@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerChannels.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:58:43 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:58:43 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 Channel *Server::getChannelByName(std::string const &name)
@@ -124,7 +136,7 @@ void Server::joinChannel(std::string const &data, int client_fd)
 			+ user->getNickname() + " = #" + channelName + " :" \
 			+ names_list + "\r\n";
 			std::string end_names = ":" + _server_name + " 366 " \
-			+ user->getNickname() + " #" + channelName 
+			+ user->getNickname() + " #" + channelName \
 			+ " :End of /NAMES list\r\n";
 			send(user->getFd(), names_msg.c_str(), names_msg.length(), 0);
 			send(user->getFd(), end_names.c_str(), end_names.length(), 0);

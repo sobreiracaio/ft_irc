@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerClients.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:58:49 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:58:49 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 void Server::_acceptNewClient(void)
@@ -78,15 +90,15 @@ void Server::_handleClientData(int client_fd)
 	if(data.find("PONG", 0, 4) == std::string::npos)
 		logMessage("from FD = " + itoa(client_fd) + ":\n", BLUE, data, WHITE);
 	
-	// SEMPRE adicionar dados ao buffer primeiro
+	// Always add data to buffer first
 	client->appendBuffer(data);
 	
-	// Se cliente não está registrado, processa registro
+	// If the client is not registered, do it so
 	if(!client->isRegistered())
 	{
 		bool processed_any_command = false;
 		
-		// Processa todos os comandos de registro disponíveis no buffer
+		// Processes all the register commands available on buffer
 		while(client->isDataComplete())
 		{
 			std::string message = client->getNextCompleteMessage();
@@ -97,7 +109,7 @@ void Server::_handleClientData(int client_fd)
 			logMessage("Processing registration command: ", CYAN, message, WHITE);
 			processed_any_command = true;
 			
-			// Processa comandos de registro
+			// Processes register commands
 			if (message.length() >= 5)
 			{
 				std::string cmd = message.substr(0, 5);
@@ -115,13 +127,13 @@ void Server::_handleClientData(int client_fd)
 					client->parseUserCommand(message);
 				}
 			}
-			// CORREÇÃO: Para nc, também aceita comandos sem espaço extra
+			// Correction : For nc "clients" also accepts commands without extra spaces
 			else if (message.length() >= 4)
 			{
 				std::string cmd = message.substr(0, 4);
 				if(cmd == "NICK")
 				{
-					// Processa NICK mesmo sem espaço (para nc)
+					//Processes NICK even without extra spaces(for nc)
 					if(message.length() > 4)
 						client->parseNickCommand("NICK " + message.substr(4));
 				}
@@ -138,32 +150,35 @@ void Server::_handleClientData(int client_fd)
 			}
 		}
 		
-		// NOVO: Se processamos comandos e temos PASS + NICK, tenta completar registro
+		// If a valid command was found and there are PASS + NICK set, try to complete registration
 		if(processed_any_command && !client->getPassword().empty() && !client->getNickname().empty())
 		{
-			// Força verificação de registro (que auto-gerará USER se necessário)
+			// Forces register checking (auto generate USER if necessary)
 			client->checkRegistrationComplete();
 		}
 		
-		// Só verifica se está totalmente registrado após processar todos os comandos
+		// Only checks if client is fully registered after processing commands
 		if (client->isRegistered())
 		{
-			// Verifica se a senha está correta APENAS quando totalmente registrado
+			// Checks if the password is correct ONLY when client is fully registered
 			if(!this->_checkPassword(client->getPassword()))
 			{
-				logMessage("Password check failed for client: ", RED, client->getNickname(), YELLOW);
-				this->_sendErrorReply(client_fd, ERR_PASSWDMISMATCH, "Password incorrect!");
-				// Aguarda um pouco antes de desconectar para evitar "connection reset"
+				logMessage("Password check failed for client: ", \
+					RED, client->getNickname(), YELLOW);
+				this->_sendErrorReply(client_fd, ERR_PASSWDMISMATCH, \
+					"Password incorrect!");
+				// Waits before disconnecting to avoid "connection reset"
 				usleep(100000); // 100ms
 				this->_removeClient(client_fd);
 				return;
 			}
 			
-			// Verifica duplicatas de nickname
+			// Checks nickname duplicates
 			std::string nick = this->_checkDoubles(client->getNickname(), client_fd);
 			client->setNickname(nick);
 			this->_welcomeMessage(client);
-			logMessage("Client fully registered: ", GREEN, client->getNickname(), BLUE);
+			logMessage("Client fully registered: ", GREEN, \
+				client->getNickname(), BLUE);
 		}
 		return;
 	}
@@ -184,7 +199,7 @@ void Server::_handleClientData(int client_fd)
 		
 		if (!client_still_exists)
 		{
-			return; // Cliente was removed, does not try to access its data anymore
+			return; // Client was removed, does not try to access its data anymore
 		}
 		
 		// Checks if client still exists after command execution
@@ -196,15 +211,16 @@ void Server::_handleClientData(int client_fd)
 
 void Server::_removeClient(int client_fd)
 {
-	// Remove from poll fds first
+	// Remove from poll_fds first
 	std::vector<struct pollfd>::iterator poll_it;
-	for (poll_it = this->_poll_fds.begin(); poll_it != this->_poll_fds.end(); poll_it++)
+	for (poll_it = this->_poll_fds.begin(); \
+		poll_it != this->_poll_fds.end(); poll_it++)
 	{
 		if(poll_it->fd == client_fd)
 		{
 			this->_poll_fds.erase(poll_it);
 			break;
-		}   
+		}
 	}
 	
 	// Find and remove client
@@ -219,8 +235,7 @@ void Server::_removeClient(int client_fd)
 			std::set<std::string> client_channels = client->getChannels();
 			std::string client_nick = client->getNickname();
 			
-			for (std::set<std::string>::const_iterator it = client_channels.begin(); 
-				 it != client_channels.end(); ++it)
+			for (std::set<std::string>::const_iterator it = client_channels.begin(); it != client_channels.end(); ++it)
 			{
 				std::string channel_name = *it;
 				if (channel_name[0] == '#')

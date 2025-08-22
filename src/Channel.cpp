@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Channel.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:57:50 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:57:50 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Channel.hpp"
 
 Channel::Channel(std::string const &name, std::string const &password) \
@@ -195,7 +207,7 @@ bool Channel::_hasMode(char mode) const
 	return (this->_modes.find(mode) != this->_modes.end());
 }
 
-void Channel::_boreadcastToChannel(Server *server, const std::string &message, int exclude_fd)
+void Channel::_broadcastToChannel(Server *server, const std::string &message, int exclude_fd)
 {
 	for (std::set<std::string>::const_iterator it = this->_userlist.begin(); \
 		it != this->_userlist.end(); ++it)

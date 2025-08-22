@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerCommand.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:59:09 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:59:09 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 int Server::parseCommand(const std::string& data)
@@ -40,7 +52,8 @@ void Server::modeCommand(std::string const &data, int client_fd)
 	
 	if (tokens.size() < 2)
 	{
-		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, \
+			"MODE :Not enough parameters");
 		return;
 	}
 	
@@ -53,7 +66,8 @@ void Server::modeCommand(std::string const &data, int client_fd)
 	}
 	else
 	{
-		this->_sendErrorReply(client_fd, ERR_UNKNOWNMODE, "User modes not implemented");
+		this->_sendErrorReply(client_fd, ERR_UNKNOWNMODE, \
+			"User modes not implemented");
 	}
 }
 
@@ -63,7 +77,8 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	
 	if (tokens.size() < 2)
 	{
-		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, "TOPIC :Not enough parameters");
+		this->_sendErrorReply(client_fd, ERR_NEEDMOREPARAMS, \
+			"TOPIC :Not enough parameters");
 		return;
 	}
 	
@@ -74,7 +89,8 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	Channel *channel = getChannelByName(channelName);
 	if (!channel)
 	{
-		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" + channelName + " :No such channel");
+		this->_sendErrorReply(client_fd, ERR_NOSUCHCHANNEL, "#" \
+			+ channelName + " :No such channel");
 		return;
 	}
 	
@@ -85,7 +101,8 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	// Check if user is in channel
 	if (!channel->hasUser(client->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" + channelName + " :You're not on that channel");
+		this->_sendErrorReply(client_fd, ERR_NOTONCHANNEL, "#" \
+			+ channelName + " :You're not on that channel");
 		return;
 	}
 	
@@ -96,14 +113,16 @@ void Server::topicCommand(std::string const &data, int client_fd)
 		std::string topic = channel->getTopic();
 		if (topic.empty())
 		{
-			std::string no_topic = ":" + _server_name + " 331 " + client->getNickname() + 
-								  " #" + channelName + " :No topic is set\r\n";
+			std::string no_topic = ":" + _server_name + " 331 " \
+			+ client->getNickname() + " #" + channelName \
+			+ " :No topic is set\r\n";
 			send(client_fd, no_topic.c_str(), no_topic.length(), 0);
 		}
 		else
 		{
-			std::string topic_msg = ":" + _server_name + " 332 " + client->getNickname() + 
-								   " #" + channelName + " :" + topic + "\r\n";
+			std::string topic_msg = ":" + _server_name + " 332 " \
+			+ client->getNickname() + " #" + channelName + " :" \
+			+ topic + "\r\n";
 			send(client_fd, topic_msg.c_str(), topic_msg.length(), 0);
 		}
 		return;
@@ -112,7 +131,8 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	// Setting new topic
 	if (!channel->canUserSetTopic(client->getNickname()))
 	{
-		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" + channelName + " :You're not channel operator");
+		this->_sendErrorReply(client_fd, ERR_CHANOPRIVSNEEDED, "#" \
+			+ channelName + " :You're not channel operator");
 		return;
 	}
 	
@@ -120,8 +140,9 @@ void Server::topicCommand(std::string const &data, int client_fd)
 	channel->setTopic(newTopic);
 	
 	// Broadcast topic change to channel
-	std::string topic_change = ":" + client->getNickname() + "!" + client->getUsername() + "@" + 
-		client->getHostname() + " TOPIC #" + channelName + " :" + newTopic + "\r\n";
+	std::string topic_change = ":" + client->getNickname() + "!" \
+	+ client->getUsername() + "@" + client->getHostname() + " TOPIC #" \
+	+ channelName + " :" + newTopic + "\r\n";
 	
 	std::vector<std::string> users = channel->getUserList();
 	for (size_t i = 0; i < users.size(); i++)
@@ -129,12 +150,15 @@ void Server::topicCommand(std::string const &data, int client_fd)
 		Client *user = getClientByNick(users[i]);
 		if (user)
 		{
-			if (send(user->getFd(), topic_change.c_str(), topic_change.length(), 0) == -1)
-				logMessage("ERROR: ", RED, "Failed to send TOPIC change", YELLOW, ERR);
+			if (send(user->getFd(), topic_change.c_str(), \
+				topic_change.length(), 0) == -1)
+				logMessage("ERROR: ", RED, \
+					"Failed to send TOPIC change", YELLOW, ERR);
 		}
 	}
 	
-	logMessage("Topic changed for channel ", BLUE, channelName + ": " + newTopic, GREEN);
+	logMessage("Topic changed for channel ", BLUE, channelName + ": " \
+		+ newTopic, GREEN);
 }
 
 bool Server::executeCommand(int client_fd, int command_code, std::string const &data)

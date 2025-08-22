@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Utils.hpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:57:22 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:57:22 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <iostream>
@@ -23,17 +35,16 @@
 #define RESET   "\033[0m"
 #define BOLD    "\033[1m"
 
-#define BUFFER_SIZE 4096
-#define MAX_NICK_LENGTH 30      
-#define MAX_CHANNEL_NAME 50
-#define MAX_MESSAGE_LENGTH  512
-#define MAX_TOPIC_LENGTH  307
-#define MAX_CHANNELS_PER_USER  10
-#define MAX_USERS_PER_CHANNEL  100
+#define BUFFER_SIZE				4096
+#define MAX_NICK_LENGTH			30
+#define MAX_CHANNEL_NAME		50
+#define MAX_MESSAGE_LENGTH		512
+#define MAX_TOPIC_LENGTH		307
+#define MAX_CHANNELS_PER_USER	10
+#define MAX_USERS_PER_CHANNEL	100
 
 // log generation functions
 void logMessage(std::string msg, std::string msg_color, std::string args, std::string args_color, int type = LOG);
-
 
 // Conversions and validation
 std::string itoa(int number);
@@ -41,7 +52,6 @@ bool isNum(const std::string &str);
 bool isValidPort(int port);
 bool isValidNickChar(char c);
 bool isValidChannelChar(char c);
-
 
 // IRC specific manipulations
 bool isValidNickname(const std::string &nickname);

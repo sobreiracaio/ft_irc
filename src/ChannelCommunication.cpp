@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ChannelCommunication.cpp                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:57:57 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:57:57 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Channel.hpp"
 
 // Connection and Communication
@@ -60,7 +72,7 @@ std::string const msg, std::string command)
 			if (send(client->getFd(), formatted_msg.c_str(), \
 				formatted_msg.length(), 0) == -1)
 				logMessage("ERROR: ", RED, "Failed to send message to " \
-				+ *it, YELLOW, ERR);
+					+ *it, YELLOW, ERR);
 		}
 	}
 }
@@ -71,7 +83,7 @@ void Channel::announceJoin(Server *server, Client *client)
 	std::string join_msg = ":" + client->getNickname() \
 	+ "!" + client->getUsername() + "@" + client->getHostname() \
 	+ " JOIN #" + this->_name + "\r\n";
-	this->_boreadcastToChannel(server, join_msg);
+	this->_broadcastToChannel(server, join_msg);
 }
 
 void Channel::announcePart(Server *server, Client *client, \
@@ -84,7 +96,7 @@ const std::string &reason)
 		part_msg += " :" + reason;
 	part_msg += "\r\n";
 
-	this->_boreadcastToChannel(server, part_msg);
+	this->_broadcastToChannel(server, part_msg);
 }
 
 void Channel::announceQuit(Server *server, Client *client, \
@@ -97,12 +109,12 @@ void Channel::announceQuit(Server *server, Client *client, \
 		quit_msg += " :" + reason;
 	quit_msg += "\r\n";
 
-	this->_boreadcastToChannel(server, quit_msg, client->getFd());
+	this->_broadcastToChannel(server, quit_msg, client->getFd());
 }
 
 void Channel::announceNickChange(Server *server, const std::string &oldNick, \
 	const std::string &newNick)
 {
 	std::string nick_msg = ":" + oldNick + " NICK :" + newNick + "\r\n";
-	this->_boreadcastToChannel(server, nick_msg);
+	this->_broadcastToChannel(server, nick_msg);
 }

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:58:25 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:58:25 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 #include "../include/Utils.hpp"
 
@@ -7,7 +19,7 @@ void signalHandler(int signal_type)
 {
 	switch (signal_type)
 	{
-	case SIGINT:  // CTRL + C
+	case SIGINT: // CTRL + C
 		logMessage("\nReceived SIGINT (Ctrl+C). ", RED, \
 			"Shutting down server gracefully...", YELLOW);
 		if(g_server)
@@ -18,8 +30,9 @@ void signalHandler(int signal_type)
 
 	case SIGTSTP: // CTRL + Z
 		logMessage("\nReceived SIGTSTP (Ctrl+Z). ", RED, \
-			"Signal ignored - use Ctrl+C to quit.", YELLOW);
-		return;
+			"Server suspending... Warning - It won't be possible to recover this connection - use Ctrl+C to quit.", YELLOW);
+		if(g_server)
+			g_server->cleanUp();
 		break;
 
 	case SIGTERM: // System shutdown
@@ -91,7 +104,7 @@ int main(int argc, char **argv)
 
 	Server server(int_port, pass);
 	g_server = &server;
-	
+
 	if (server.serverInit())
 		logMessage("Server running on port: ", BLUE, port, GREEN);
 	else

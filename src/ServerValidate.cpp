@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerValidate.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: crocha-s <crocha-s@student.42.fr>          #+#  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025-08-22 13:59:21 by crocha-s          #+#    #+#             */
+/*   Updated: 2025-08-22 13:59:21 by crocha-s         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 
 bool Server::_checkPassword(std::string const &client_pass)
@@ -12,16 +24,18 @@ bool Server::_isValidNickname(const std::string &nickname)
 	
 	// First char must be a letter or a valid special char
 	char first = nickname[0];
-	if (!isalpha(first) && first != '[' && first != ']' && first != '\\' && 
-		first != '`' && first != '_' && first != '^' && first != '{' && first != '}')
+	if (!isalpha(first) && first != '[' && first != ']' && first != '\\' \
+		&& first != '`' && first != '_' && first != '^' && first != '{' \
+		&& first != '}')
 		return false;
 
 	// Other characters can be alphanumericals or special chars
 	for (size_t i = 1; i < nickname.length(); i++)
 	{
 		char c = nickname[i];
-		if (!isalnum(c) && c != '[' && c != ']' && c != '\\' && 
-			c != '`' && c != '_' && c != '^' && c != '{' && c != '}' && c != '-')
+		if (!isalnum(c) && c != '[' && c != ']' && c != '\\' \
+			&& c != '`' && c != '_' && c != '^' && c != '{' && c != '}' \
+			&& c != '-')
 			return false;
 	}
 	return true;
@@ -60,25 +74,27 @@ std::string Server::_checkDoubles(std::string const &nickname, int client_fd)
 	}
 	modifiedNickname = cleanNick;
 	
-	// Remove espaços extras
+	// Remove extra spaces
 	size_t space_pos = modifiedNickname.find(' ');
 	if (space_pos != std::string::npos)
 		modifiedNickname.erase(space_pos);
 	
 	if (!_isValidNickname(modifiedNickname))
 	{
-		this->_sendErrorReply(client_fd, ERR_ERRONEUSNICKNAME, "Erroneous nickname");
+		this->_sendErrorReply(client_fd, ERR_ERRONEUSNICKNAME, \
+			"Erroneous nickname");
 		return modifiedNickname;
 	}
 	
-	// Verificação melhorada para nicks duplicados
+	// Checking double nicks
 	std::map<int, Client*>::iterator it;
 	for (it = this->_clients.begin(); it != this->_clients.end(); it++)
 	{
 		Client *client = it->second;
-		// Verifica se o cliente existe, está ativo e tem o mesmo nick
-		if (client && client->getFd() != client_fd && !client->getNickname().empty() && 
-			client->getNickname() == modifiedNickname)
+		// Check if the client exists, if it is active and has the same nick
+		if (client && client->getFd() != client_fd \
+			&& !client->getNickname().empty() \
+			&& client->getNickname() == modifiedNickname)
 		{
 			this->_sendErrorReply(client_fd, ERR_NICKNAMEINUSE, modifiedNickname + " :Nickname is already in use");
 			modifiedNickname += "_";
