@@ -89,7 +89,7 @@ void Server::kickUser(std::string const &data, int client_fd)
 		Client *user = getClientByNick(users[i]);
 		if (user)
 		{
-			if (send(user->getFd(), kick_msg.c_str(), \kick_msg.length(), 0) == -1)
+			if (send(user->getFd(), kick_msg.c_str(), kick_msg.length(), 0) == -1)
 				logMessage("ERROR: ", RED, \
 					"Failed to send KICK message", YELLOW, ERR);
 		}
