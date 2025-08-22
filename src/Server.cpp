@@ -122,8 +122,8 @@ void Server::run()
 			{
 				Client *client = this->getClient(this->_poll_fds[i].fd);
 				
-				// 5 minutes idle is automatically disconected
-				if(now - client->getLastActivity() > 300)
+				// 10 minutes idle is automatically disconected
+				if(now - client->getLastActivity() > 600)
 					this->quitServer("QUIT", client->getFd(), "Idle");
 			}
 		}
